@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\Customer;
@@ -9,13 +10,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Controllers\Controller;
 
-class AuthController extends Controller
+class AuthController extends BaseController
 {
-    /**
-     * Handle user registration.
-     */
     public function register(RegisterRequest $request): JsonResponse
     {
         $customer = Customer::create([
@@ -26,57 +23,48 @@ class AuthController extends Controller
 
         Auth::login($customer);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Registration successful! Welcome, ' . $customer->name . '.',
-            'user'    => [
+        return $this->success([
+            'user' => [
                 'id'     => $customer->id,
                 'name'   => $customer->name,
                 'email'  => $customer->email,
                 'avatar' => $customer->avatar,
             ],
-            'redirect' => '/',
-        ], 201);
+            'redirect' => '/'
+        ], 'Registration successful! Welcome, ' . $customer->name . '.', 201);
     }
 
-    /**
-     * Handle user login.
-     */
     public function login(LoginRequest $request): JsonResponse
     {
         $credentials = $request->only('email', 'password');
         $remember    = $request->boolean('remember');
 
-        if (! Auth::attempt($credentials, $remember)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'These credentials do not match our records.',
-                'errors'  => [
-                    'email' => ['Invalid email or password.'],
-                ],
-            ], 422);
+        if (!Auth::attempt($credentials, $remember)) {
+
+            return $this->error(
+                'These credentials do not match our records.',
+                422,
+                [
+                    'email' => ['Invalid email or password.']
+                ]
+            );
         }
 
         $request->session()->regenerate();
 
         $customer = Auth::user();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Login successful! Welcome back, ' . $customer->name . '.',
-            'user'    => [
+        return $this->success([
+            'user' => [
                 'id'     => $customer->id,
                 'name'   => $customer->name,
                 'email'  => $customer->email,
                 'avatar' => $customer->avatar,
             ],
-            'redirect' => '/',
-        ]);
+            'redirect' => '/'
+        ], 'Login successful! Welcome back, ' . $customer->name . '.');
     }
 
-    /**
-     * Handle user logout.
-     */
     public function logout(Request $request): JsonResponse
     {
         Auth::logout();
@@ -84,11 +72,9 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json([
-            'success'  => true,
-            'message'  => 'You have been logged out successfully.',
-            'redirect' => '/',
-        ]);
+        return $this->success([
+            'redirect' => '/'
+        ], 'You have been logged out successfully.');
     }
 
     public function adminLogin(LoginRequest $request): JsonResponse
@@ -96,28 +82,27 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $remember    = $request->boolean('remember');
 
-        if (! Auth::guard('admin')->attempt($credentials, $remember)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'These credentials do not match our records.',
-                'errors'  => [
-                    'email' => ['Invalid email or password.'],
-                ],
-            ], 422);
+        if (!Auth::guard('admin')->attempt($credentials, $remember)) {
+
+            return $this->error(
+                'These credentials do not match our records.',
+                422,
+                [
+                    'email' => ['Invalid email or password.']
+                ]
+            );
         }
 
         $request->session()->regenerate();
 
         $user = Auth::guard('admin')->user();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Admin login successful! Welcome back, ' . $user->name . '.',
-            'user'    => [
-                'name'   => $user->name,
-                'email'  => $user->email,
+        return $this->success([
+            'user' => [
+                'name'  => $user->name,
+                'email' => $user->email,
             ],
-            'redirect' => '/admin',
-        ]);
+            'redirect' => '/admin'
+        ], 'Admin login successful! Welcome back, ' . $user->name . '.');
     }
 }

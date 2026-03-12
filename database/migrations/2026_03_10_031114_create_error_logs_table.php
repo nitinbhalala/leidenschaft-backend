@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('error_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('image')->nullable();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->integer('status')->default(1);
+            $table->string('source')->nullable();
+            $table->string('user')->nullable();
+            $table->text('message')->nullable();
+            $table->longText('stack_trace')->nullable();
+            $table->string('status')->nullable()->default('open');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('error_logs');
     }
 };

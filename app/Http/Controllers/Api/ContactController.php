@@ -8,7 +8,6 @@ use App\Http\Requests\ContactRequest;
 
 class ContactController extends Controller
 {
-    // List contacts
     public function index()
     {
         $contacts = Contact::latest()->get();
@@ -19,7 +18,6 @@ class ContactController extends Controller
         ]);
     }
 
-    // Store contact message
     public function store(ContactRequest $request)
     {
         $contact = Contact::create($request->validated());
@@ -31,7 +29,6 @@ class ContactController extends Controller
         ], 201);
     }
 
-    // Show single contact
     public function show(Contact $contact)
     {
         return response()->json([
@@ -40,7 +37,6 @@ class ContactController extends Controller
         ]);
     }
 
-    // Update contact
     public function update(ContactRequest $request, Contact $contact)
     {
         $contact->update($request->validated());
@@ -52,7 +48,6 @@ class ContactController extends Controller
         ]);
     }
 
-    // Delete contact
     public function destroy(Contact $contact)
     {
         $contact->delete();

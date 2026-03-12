@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\CategoryRequest;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display all categories
-     */
     public function index()
     {
         $categories = Category::withCount('products')
@@ -23,12 +21,18 @@ class CategoryController extends Controller
         ]);
     }
 
-    /**
-     * Store new category
-     */
     public function store(CategoryRequest $request)
     {
-        $category = Category::create($request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('image')) {
+
+            $image = $request->file('image')->store('categories', 'public');
+
+            $data['image'] = $image;
+        }
+
+        $category = Category::create($data);
 
         return response()->json([
             'success' => true,
@@ -37,9 +41,6 @@ class CategoryController extends Controller
         ], 201);
     }
 
-    /**
-     * Show single category
-     */
     public function show(Category $category)
     {
         $category->loadCount('products');
@@ -50,12 +51,22 @@ class CategoryController extends Controller
         ]);
     }
 
-    /**
-     * Update category
-     */
     public function update(CategoryRequest $request, Category $category)
     {
-        $category->update($request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('image')) {
+
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
+
+            $image = $request->file('image')->store('categories', 'public');
+
+            $data['image'] = $image;
+        }
+
+        $category->update($data);
 
         return response()->json([
             'success' => true,
@@ -64,11 +75,12 @@ class CategoryController extends Controller
         ]);
     }
 
-    /**
-     * Delete category
-     */
     public function destroy(Category $category)
     {
+        if ($category->image && Storage::disk('public')->exists($category->image)) {
+            Storage::disk('public')->delete($category->image);
+        }
+
         $category->delete();
 
         return response()->json([

@@ -29,7 +29,6 @@ class SettingController extends Controller
     public function store(SettingRequest $request)
     {
         try {
-
             $setting = Setting::create($request->validated());
 
             return response()->json([
@@ -50,7 +49,6 @@ class SettingController extends Controller
     public function show($id)
     {
         try {
-
             $setting = Setting::findOrFail($id);
 
             return new SettingResource($setting);
@@ -67,7 +65,6 @@ class SettingController extends Controller
     public function update(SettingRequest $request, $id)
     {
         try {
-
             $setting = Setting::findOrFail($id);
 
             $setting->update($request->validated());
@@ -90,7 +87,6 @@ class SettingController extends Controller
     public function destroy($id)
     {
         try {
-
             $setting = Setting::findOrFail($id);
 
             $setting->delete();
