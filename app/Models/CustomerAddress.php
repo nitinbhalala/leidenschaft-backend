@@ -19,7 +19,8 @@ class CustomerAddress extends Model
         'state',
         'country',
         'pincode',
-        'is_default'
+        'is_default',
+        'type'
     ];
 
     public function customer()

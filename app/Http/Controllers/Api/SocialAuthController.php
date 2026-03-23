@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Customer;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
 
@@ -14,7 +13,7 @@ class SocialAuthController extends BaseController
     {
         $this->validateProvider($provider);
 
-        return Socialite::driver($provider)->redirect();
+        return Socialite::driver($provider)->stateless()->redirect();  // 👈 add stateless()
     }
 
     public function callback(string $provider)
@@ -22,11 +21,14 @@ class SocialAuthController extends BaseController
         $this->validateProvider($provider);
 
         try {
-
-            $socialUser = Socialite::driver($provider)->user();
+            $socialUser = Socialite::driver($provider)->stateless()->user();  // 👈 add stateless()
         } catch (Throwable $e) {
-
-            return redirect('/')->with('error', 'Authentication with ' . ucfirst($provider) . ' failed. Please try again.');
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+                'file'    => $e->getFile(),
+            ], 401);
         }
 
         $customer = Customer::where('provider_id', $socialUser->getId())
@@ -34,14 +36,12 @@ class SocialAuthController extends BaseController
             ->first();
 
         if ($customer) {
-
             $customer->update([
                 'provider_id' => $socialUser->getId(),
                 'avatar'      => $customer->avatar ?? $socialUser->getAvatar(),
                 'provider'    => $provider,
             ]);
         } else {
-
             $customer = Customer::create([
                 'name'        => $socialUser->getName(),
                 'email'       => $socialUser->getEmail(),
@@ -52,9 +52,11 @@ class SocialAuthController extends BaseController
             ]);
         }
 
-        Auth::login($customer, true);
+        // Generate Sanctum token instead of Auth::login()  👈
+        $token = $customer->createToken('auth_token')->plainTextToken;
 
-        return redirect('/')->with('success', 'Login with ' . ucfirst($provider) . ' was successful!');
+        // Redirect to React app with token in URL  👈
+        return redirect("http://localhost:3000/social-callback?token={$token}");
     }
 
     private function validateProvider(string $provider): void

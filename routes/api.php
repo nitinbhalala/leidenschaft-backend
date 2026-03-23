@@ -1,17 +1,26 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AdminAuthController;
+use App\Http\Controllers\Api\Admin\ProductInventoryController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\CustomerAddressController;
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ErrorLogController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PolicyController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -58,7 +67,6 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::prefix('admin')->group(function () {
-
     Route::post('/login', [AdminAuthController::class, 'login']);
 
     Route::middleware('auth:admin')->group(function () {
@@ -76,10 +84,19 @@ Route::middleware('auth')->group(function () {
     //logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // API Resources
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+
+    // Categories
     Route::apiResource('categories', CategoryController::class);
+
+    // Contacts
     Route::apiResource('contacts', ContactController::class);
+
+    // Settings
     Route::apiResource('settings', SettingController::class);
+
+    // Products
     Route::apiResource('products', ProductController::class);
 
     // Product Reviews
@@ -105,4 +122,44 @@ Route::middleware('auth')->group(function () {
 
     // Blogs
     Route::apiResource('blogs', BlogController::class);
+
+    // Product Inventory
+    Route::prefix('inventory')->group(function () {
+        Route::get('/', [ProductInventoryController::class, 'index']);
+        Route::get('stats', [ProductInventoryController::class, 'stats']);
+        Route::post('{id}/increase-stock', [ProductInventoryController::class, 'increaseStock']);
+        Route::post('{id}/decrease-stock', [ProductInventoryController::class, 'decreaseStock']);
+        Route::post('{id}/update-stock', [ProductInventoryController::class, 'updateStock']);
+        Route::post('{id}/toggle-active', [ProductInventoryController::class, 'toggleActive']);
+    });
+
+    // Customers
+    Route::apiResource('customers', CustomerController::class);
+
+    // Customer Addresses
+    Route::apiResource('customer-address', CustomerAddressController::class);
+
+    // Cart
+    Route::post('/add-to-cart', [CartController::class, 'addToCart']);
+    Route::delete('/cart/{id}', [CartController::class, 'destroy']);
+
+    // Wishlist                                                                                                                                               
+    Route::post('/add-to-wishlist', [WishlistController::class, 'addToWishlist']);
+    Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
+
+    // Policies
+    Route::apiResource('policies', PolicyController::class);
+
+    // Orders
+    Route::apiResource('orders', OrderController::class);
+
+    // Payment
+    Route::prefix('payments')->group(function () {
+        Route::get('/', [PaymentController::class, 'index']);
+        Route::post('/create-order', [PaymentController::class, 'createOrder']);
+        Route::post('/verify', [PaymentController::class, 'verify']);
+        Route::get('/{id}', [PaymentController::class, 'show']);
+        Route::delete('/{id}', [PaymentController::class, 'destroy']);
+        Route::post('/{id}/refund', [PaymentController::class, 'refund']);
+    });
 });

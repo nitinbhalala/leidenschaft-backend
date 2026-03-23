@@ -3,8 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class ProductReviewRequest extends FormRequest
+class PolicyRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,12 +22,18 @@ class ProductReviewRequest extends FormRequest
      */
     public function rules(): array
     {
+        $policy = $this->route('policy');
+
         return [
-            'product_id' => 'required|exists:products,id',
-            'customer_id' => 'required|exists:customers,id',
-            'name' => 'required|string|max:255',
-            'rating' => 'required|integer|min:1|max:5',
-            'review' => 'required|string|max:2000'
+            'title' => ['required', 'string', 'max:255'],
+            'slug' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('policies', 'slug')->ignore($policy?->id),
+            ],
+            'content' => ['nullable', 'string'],
+            'status' => ['required', 'boolean'],
         ];
     }
 }

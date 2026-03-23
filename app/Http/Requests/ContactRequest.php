@@ -14,7 +14,7 @@ class ContactRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'email' => 'required|email|max:255',
             'contact_method' => 'nullable|in:email,phone,sms',
@@ -26,7 +26,7 @@ class ContactRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'First name is required',
+            'first_name.required' => 'Name is required',
             'email.required' => 'Email is required',
             'comment.required' => 'Comment is required'
         ];
