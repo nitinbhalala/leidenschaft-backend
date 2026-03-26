@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class CategoryRequest extends FormRequest
 {
     /**
-     * Authorize request
+     * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
@@ -15,14 +15,18 @@ class CategoryRequest extends FormRequest
     }
 
     /**
-     * Validation rules
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048'
+            'parent_id' => 'nullable|exists:categories,id',
+            'name' => 'required|string|max:191',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'description' => 'nullable|string',
+            'status' => 'nullable|integer|min:0|max:1',
         ];
     }
 
@@ -32,11 +36,17 @@ class CategoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Category name is required',
-            'name.max' => 'Category name cannot exceed 255 characters',
-            'image.image' => 'File must be an image',
-            'image.mimes' => 'Image must be jpg, jpeg, png or webp',
-            'image.max' => 'Image size must be less than 2MB',
+            'parent_id.exists' => 'Selected parent category is invalid.',
+            'name.required' => 'Name is required.',
+            'name.string' => 'Name must be a string.',
+            'name.max' => 'Name may not be greater than 191 characters.',
+            'image.image' => 'Image must be an image file.',
+            'image.mimes' => 'Image must be a file of type: jpg, jpeg, png, webp.',
+            'image.max' => 'Image may not be greater than 5MB.',
+            'description.string' => 'Description must be a string.',
+            'status.integer' => 'Status must be a number.',
+            'status.min' => 'Status must be at least 0.',
+            'status.max' => 'Status may not be greater than 1.',
         ];
     }
 }

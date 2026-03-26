@@ -26,4 +26,14 @@ class SettingRequest extends FormRequest
             'value' => 'nullable|string'
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'key.required' => 'Key is required.',
+            'key.string' => 'Key must be a string.',
+            'key.max' => 'Key may not be greater than 255 characters.',
+            'value.string' => 'Value must be a string.',
+        ];
+    }
 }

@@ -20,6 +20,9 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->string('currency')->default('INR');
             $table->enum('status', ['pending', 'completed', 'failed', 'refunded'])->default('pending');
+            $table->string('refund_id')->nullable();
+            $table->decimal('refund_amount', 10, 2)->nullable();
+            $table->timestamp('refunded_at')->nullable();
             $table->json('meta')->nullable();
             $table->timestamps();
         });

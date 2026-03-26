@@ -13,8 +13,14 @@ class Contact extends Model
         'first_name',
         'last_name',
         'email',
-        'contact_method',
         'phone',
-        'comment'
+        'contact_method',
+        'subject',
+        'message',
+        'status',
+    ];
+
+    protected $attributes = [
+        'status' => 'New',
     ];
 }

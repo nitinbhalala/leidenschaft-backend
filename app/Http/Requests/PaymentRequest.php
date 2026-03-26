@@ -26,4 +26,14 @@ class PaymentRequest extends FormRequest
             'amount' => 'required|numeric|min:1',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'order_id.string' => 'Order ID must be a string.',
+            'amount.required' => 'Amount is required.',
+            'amount.numeric'  => 'Amount must be a number.',
+            'amount.min'      => 'Amount must be at least 1.',
+        ];
+    }
 }

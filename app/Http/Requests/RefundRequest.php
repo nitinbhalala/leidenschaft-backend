@@ -25,4 +25,12 @@ class RefundRequest extends FormRequest
             'amount' => 'nullable|numeric|min:1'
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'amount.numeric' => 'Amount must be a number.',
+            'amount.min' => 'Amount must be at least 1.',
+        ];
+    }
 }

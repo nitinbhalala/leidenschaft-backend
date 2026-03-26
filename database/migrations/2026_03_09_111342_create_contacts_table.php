@@ -18,7 +18,9 @@ return new class extends Migration
             $table->string('email');
             $table->string('contact_method')->nullable();
             $table->string('phone')->nullable();
-            $table->text('comment');
+            $table->string('subject')->nullable();
+            $table->text('message')->nullable();
+            $table->string('status')->default('New');
             $table->timestamps();
         });
     }

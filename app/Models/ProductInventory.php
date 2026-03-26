@@ -14,7 +14,14 @@ class ProductInventory extends Model
         'stock',
         'low_stock_threshold',
         'status',
-        'is_active'
+        'is_active',
+    ];
+
+    protected $casts = [
+        'product_id'          => 'integer',
+        'stock'               => 'integer',
+        'low_stock_threshold' => 'integer',
+        'is_active'           => 'boolean',
     ];
 
     public function product()
@@ -31,7 +38,6 @@ class ProductInventory extends Model
         } else {
             $this->status = 'in_stock';
         }
-
-        $this->save();
+        $this->saveQuietly();
     }
 }

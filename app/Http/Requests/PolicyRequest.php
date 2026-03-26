@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class PolicyRequest extends FormRequest
 {
@@ -22,18 +21,19 @@ class PolicyRequest extends FormRequest
      */
     public function rules(): array
     {
-        $policy = $this->route('policy');
-
         return [
-            'title' => ['required', 'string', 'max:255'],
-            'slug' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('policies', 'slug')->ignore($policy?->id),
-            ],
-            'content' => ['nullable', 'string'],
-            'status' => ['required', 'boolean'],
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'title.required' => 'Title is required.',
+            'title.string'   => 'Title must be a string.',
+            'title.max'      => 'Title may not be greater than 255 characters.',
+            'content.string' => 'Content must be a string.',
         ];
     }
 }

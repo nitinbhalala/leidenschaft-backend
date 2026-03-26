@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Customer;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
 
@@ -13,7 +15,7 @@ class SocialAuthController extends BaseController
     {
         $this->validateProvider($provider);
 
-        return Socialite::driver($provider)->stateless()->redirect();  // 👈 add stateless()
+        return Socialite::driver($provider)->stateless()->redirect();
     }
 
     public function callback(string $provider)
@@ -21,14 +23,9 @@ class SocialAuthController extends BaseController
         $this->validateProvider($provider);
 
         try {
-            $socialUser = Socialite::driver($provider)->stateless()->user();  // 👈 add stateless()
+            $socialUser = Socialite::driver($provider)->stateless()->user();
         } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'line'    => $e->getLine(),
-                'file'    => $e->getFile(),
-            ], 401);
+            return redirect("http://localhost:3000/social-callback?error=" . urlencode($e->getMessage()));
         }
 
         $customer = Customer::where('provider_id', $socialUser->getId())
@@ -52,11 +49,14 @@ class SocialAuthController extends BaseController
             ]);
         }
 
-        // Generate Sanctum token instead of Auth::login()  👈
-        $token = $customer->createToken('auth_token')->plainTextToken;
+        $token = Str::random(64);
 
-        // Redirect to React app with token in URL  👈
-        return redirect("http://localhost:3000/social-callback?token={$token}");
+        $customer->update([
+            'token'            => $token,
+            'token_expires_at' => Carbon::now()->addDays(7),
+        ]);
+
+        return redirect("http://localhost:3000/social-callback?token={$token}&expires_at=" . Carbon::now()->addDays(7)->toDateTimeString());
     }
 
     private function validateProvider(string $provider): void

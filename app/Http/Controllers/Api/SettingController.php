@@ -3,105 +3,127 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Setting;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\SettingRequest;
-use App\Http\Resources\SettingResource;
+use Illuminate\Http\Request;
 
-class SettingController extends Controller
+class SettingController extends BaseController
 {
     public function index()
     {
         try {
+            $settings = Setting::all()->map(function ($setting) {
+                return [
+                    'key'   => $setting->key,
+                    'value' => $setting->value,
+                ];
+            });
 
-            $settings = Setting::latest()->paginate(10);
-
-            return SettingResource::collection($settings);
+            return $this->success($settings, 'Settings fetched successfully');
         } catch (\Exception $e) {
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Error fetching settings',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error('Error fetching settings', 500, $e->getMessage());
         }
     }
 
     public function store(SettingRequest $request)
     {
         try {
-            $setting = Setting::create($request->validated());
+            $setting = Setting::updateOrCreate(
+                ['key'   => $request->validated()['key']],
+                ['value' => $request->validated()['value']]
+            );
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Setting created successfully',
-                'data' => new SettingResource($setting)
-            ], 201);
+            return $this->success([
+                'key'   => $setting->key,
+                'value' => $setting->value,
+            ], 'Setting saved successfully', 201);
         } catch (\Exception $e) {
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Error creating setting',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error('Error saving setting', 500, $e->getMessage());
         }
     }
 
-    public function show($id)
+    public function getByKey($key)
     {
         try {
-            $setting = Setting::findOrFail($id);
+            $setting = Setting::where('key', $key)->first();
 
-            return new SettingResource($setting);
-        } catch (\Exception $e) {
+            if (!$setting) {
+                return $this->error('Setting not found', 404);
+            }
 
-            return response()->json([
-                'status' => false,
-                'message' => 'Setting not found',
-                'error' => $e->getMessage()
-            ], 404);
-        }
-    }
-
-    public function update(SettingRequest $request, $id)
-    {
-        try {
-            $setting = Setting::findOrFail($id);
-
-            $setting->update($request->validated());
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Setting updated successfully',
-                'data' => new SettingResource($setting)
+            return $this->success([
+                'key'   => $setting->key,
+                'value' => $setting->value,
             ]);
         } catch (\Exception $e) {
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Error updating setting',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error('Error fetching setting', 500, $e->getMessage());
         }
     }
 
-    public function destroy($id)
+    public function update(Request $request, $key)
     {
         try {
-            $setting = Setting::findOrFail($id);
+            $request->validate([
+                'value' => ['nullable', 'string'],
+            ]);
+
+            $setting = Setting::updateOrCreate(
+                ['key'   => $key],
+                ['value' => $request->input('value', '')]
+            );
+
+            return $this->success([
+                'key'   => $setting->key,
+                'value' => $setting->value,
+            ], 'Setting updated successfully');
+        } catch (\Exception $e) {
+            return $this->error('Error updating setting', 500, $e->getMessage());
+        }
+    }
+
+    public function bulk(Request $request)
+    {
+        $request->validate([
+            'settings'         => ['required', 'array', 'min:1'],
+            'settings.*.key'   => ['required', 'string', 'max:255'],
+            'settings.*.value' => ['nullable', 'string'],
+        ]);
+
+        try {
+            $upserted = [];
+
+            foreach ($request->input('settings') as $item) {
+                $setting = Setting::updateOrCreate(
+                    ['key'   => $item['key']],
+                    ['value' => $item['value'] ?? '']
+                );
+
+                $upserted[] = [
+                    'key'   => $setting->key,
+                    'value' => $setting->value,
+                ];
+            }
+
+            return $this->success($upserted, 'Settings saved successfully');
+        } catch (\Exception $e) {
+            return $this->error('Error saving settings', 500, $e->getMessage());
+        }
+    }
+
+    public function destroy($key)
+    {
+        try {
+            $setting = Setting::where('key', $key)->first();
+
+            if (!$setting) {
+                return $this->error('Setting not found', 404);
+            }
 
             $setting->delete();
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Setting deleted successfully'
-            ]);
+            return $this->success(null, 'Setting deleted successfully');
         } catch (\Exception $e) {
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Error deleting setting',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error('Error deleting setting', 500, $e->getMessage());
         }
     }
 }

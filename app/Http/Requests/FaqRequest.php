@@ -27,4 +27,17 @@ class FaqRequest extends FormRequest
             'status' => 'required|in:0,1',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'question.required' => 'Question is required.',
+            'question.string' => 'Question must be a string.',
+            'question.max' => 'Question may not be greater than 1000 characters.',
+            'answer.required' => 'Answer is required.',
+            'answer.string' => 'Answer must be a string.',
+            'status.required' => 'Status is required.',
+            'status.in' => 'Status must be either 0 or 1.',
+        ];
+    }
 }

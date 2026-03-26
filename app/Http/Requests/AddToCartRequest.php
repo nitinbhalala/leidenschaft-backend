@@ -27,4 +27,16 @@ class AddToCartRequest extends FormRequest
             'quantity' => 'nullable|integer|min:1'
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'customer_id.required' => 'Customer is required.',
+            'customer_id.exists' => 'Selected customer is invalid.',
+            'product_id.required' => 'Product is required.',
+            'product_id.exists' => 'Selected product is invalid.',
+            'quantity.integer' => 'Quantity must be a number.',
+            'quantity.min' => 'Quantity must be at least 1.',
+        ];
+    }
 }

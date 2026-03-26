@@ -11,6 +11,7 @@ class Product extends Model
 
     protected $fillable = [
         'category_id',
+        'sub_category_id',
         'name',
         'sku',
         'description',
@@ -21,9 +22,20 @@ class Product extends Model
         'status'
     ];
 
+    protected $casts = [
+        'status' => 'integer',
+        'category_id' => 'integer',
+        'sub_category_id' => 'integer',
+    ];
+
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function subCategory()
+    {
+        return $this->belongsTo(Category::class, 'sub_category_id');
     }
 
     public function images()

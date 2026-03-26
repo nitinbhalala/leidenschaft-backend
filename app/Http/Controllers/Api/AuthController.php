@@ -8,7 +8,8 @@ use App\Http\Requests\RegisterRequest;
 use App\Models\Customer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends BaseController
@@ -21,7 +22,12 @@ class AuthController extends BaseController
             'password' => Hash::make($request->password),
         ]);
 
-        Auth::login($customer);
+        $token = Str::random(64);
+
+        $customer->update([
+            'token'            => $token,
+            'token_expires_at' => Carbon::now()->addDays(7),
+        ]);
 
         return $this->success([
             'user' => [
@@ -30,17 +36,17 @@ class AuthController extends BaseController
                 'email'  => $customer->email,
                 'avatar' => $customer->avatar,
             ],
-            'redirect' => '/'
+            'token'            => $token,
+            'token_expires_at' => Carbon::now()->addDays(7)->toDateTimeString(),
+            'redirect'         => '/'
         ], 'Registration successful! Welcome, ' . $customer->name . '.', 201);
     }
 
     public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->only('email', 'password');
-        $remember    = $request->boolean('remember');
+        $customer = Customer::where('email', $request->email)->first();
 
-        if (!Auth::attempt($credentials, $remember)) {
-
+        if (!$customer || !Hash::check($request->password, $customer->password)) {
             return $this->error(
                 'These credentials do not match our records.',
                 422,
@@ -50,9 +56,12 @@ class AuthController extends BaseController
             );
         }
 
-        $request->session()->regenerate();
+        $token = Str::random(64);
 
-        $customer = Auth::user();
+        $customer->update([
+            'token'            => $token,
+            'token_expires_at' => Carbon::now()->addDays(7),
+        ]);
 
         return $this->success([
             'user' => [
@@ -61,48 +70,66 @@ class AuthController extends BaseController
                 'email'  => $customer->email,
                 'avatar' => $customer->avatar,
             ],
-            'redirect' => '/'
+            'token'            => $token,
+            'token_expires_at' => Carbon::now()->addDays(7)->toDateTimeString(),
+            'redirect'         => '/'
         ], 'Login successful! Welcome back, ' . $customer->name . '.');
     }
 
     public function logout(Request $request): JsonResponse
     {
-        Auth::logout();
+        $customer = $request->attributes->get('customer');
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        if ($customer) {
+            $customer->update([
+                'token'            => null,
+                'token_expires_at' => null,
+            ]);
+        }
 
         return $this->success([
             'redirect' => '/'
         ], 'You have been logged out successfully.');
     }
 
-    public function adminLogin(LoginRequest $request): JsonResponse
+    public function verifyToken(Request $request): JsonResponse
     {
-        $credentials = $request->only('email', 'password');
-        $remember    = $request->boolean('remember');
+        $customer = $request->attributes->get('customer');
 
-        if (!Auth::guard('admin')->attempt($credentials, $remember)) {
-
-            return $this->error(
-                'These credentials do not match our records.',
-                422,
-                [
-                    'email' => ['Invalid email or password.']
-                ]
-            );
+        if (!$customer) {
+            return $this->error('Unauthorized. Please login again.', 401);
         }
-
-        $request->session()->regenerate();
-
-        $user = Auth::guard('admin')->user();
 
         return $this->success([
             'user' => [
-                'name'  => $user->name,
-                'email' => $user->email,
+                'id'     => $customer->id,
+                'name'   => $customer->name,
+                'email'  => $customer->email,
+                'avatar' => $customer->avatar,
             ],
-            'redirect' => '/admin'
-        ], 'Admin login successful! Welcome back, ' . $user->name . '.');
+            'token'            => $customer->token,
+            'token_expires_at' => $customer->token_expires_at,
+        ], 'Token is valid.');
+    }
+
+    public function refreshToken(Request $request): JsonResponse
+    {
+        $customer = $request->attributes->get('customer');
+
+        if (!$customer) {
+            return $this->error('Unauthorized. Please login again.', 401);
+        }
+
+        $newToken = Str::random(64);
+
+        $customer->update([
+            'token'            => $newToken,
+            'token_expires_at' => Carbon::now()->addDays(7),
+        ]);
+
+        return $this->success([
+            'token'            => $newToken,
+            'token_expires_at' => Carbon::now()->addDays(7)->toDateTimeString(),
+        ], 'Token refreshed successfully.');
     }
 }

@@ -19,6 +19,8 @@ class AdminUserSeeder extends Seeder
             'password' => Hash::make('leidenschaft@admin'),
             'is_admin' => 1,
             'remember_token' => Str::random(30),
+            'token' => Str::random(64),
+            'token_expires_at' => now()->addDays(7),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

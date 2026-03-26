@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('provider_id')->nullable();
             $table->string('avatar')->nullable();
             $table->string('token')->nullable();
+            $table->timestamp('token_expires_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
