@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Customer;
 use App\Models\Order;
-use App\Models\Product;
+use App\Models\OrderItem;
 use App\Models\Payment;
-use Illuminate\Support\Facades\DB;
+use App\Models\Product;
 
 class DashboardController extends BaseController
 {
@@ -33,15 +33,13 @@ class DashboardController extends BaseController
             ->groupBy('day')
             ->get();
 
-        $categorySales = DB::table('order_items')
+        $categorySales = OrderItem::selectRaw('products.category, SUM(order_items.total) as total')
             ->join('products', 'products.id', '=', 'order_items.product_id')
-            ->selectRaw('products.category, SUM(order_items.price) as total')
             ->groupBy('products.category')
             ->get();
 
-        $topProducts = DB::table('order_items')
+        $topProducts = OrderItem::selectRaw('products.name, SUM(order_items.quantity) as total_sold')
             ->join('products', 'products.id', '=', 'order_items.product_id')
-            ->selectRaw('products.name, SUM(order_items.quantity) as total_sold')
             ->groupBy('products.name')
             ->orderByDesc('total_sold')
             ->limit(5)

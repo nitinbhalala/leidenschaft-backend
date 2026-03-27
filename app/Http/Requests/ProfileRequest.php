@@ -24,11 +24,11 @@ class ProfileRequest extends FormRequest
         $admin = $this->attributes->get('admin');
 
         return [
-            'firstName' => 'required|accepted|acceptedmax:100',
-            'lastName'  => 'required|accepted|acceptedmax:100',
-            'email'     => 'required|acceptedemail|acceptedunique:users,email,' . ($admin->id ?? 'NULL'),
-            'phone'     => 'nullable|accepted|acceptedmax:20',
-            'avatar'    => 'nullable|acceptedimage|acceptedmimes:jpg,jpeg,png,gif|acceptedmax:2048',
+            'firstName' => 'required|string|max:100',
+            'lastName'  => 'required|string|max:100',
+            'email'     => 'required|email|unique:users,email,' . ($admin->id ?? 'NULL'),
+            'phone'     => 'nullable|string|max:20',
+            'avatar'    => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
         ];
     }
 
@@ -36,19 +36,16 @@ class ProfileRequest extends FormRequest
     {
         return [
             'firstName.required' => 'First name is required.',
-            'firstName.accepted' => 'First name must be accepted.',
-            'firstName.acceptedmax' => 'First name may not be greater than 100 characters.',
+            'firstName.max' => 'First name may not be greater than 100 characters.',
             'lastName.required' => 'Last name is required.',
-            'lastName.accepted' => 'Last name must be accepted.',
-            'lastName.acceptedmax' => 'Last name may not be greater than 100 characters.',
+            'lastName.max' => 'Last name may not be greater than 100 characters.',
             'email.required' => 'Email is required.',
-            'email.acceptedemail' => 'Email must be a valid email address.',
-            'email.acceptedunique' => 'This email is already taken.',
-            'phone.accepted' => 'Phone must be accepted.',
-            'phone.acceptedmax' => 'Phone may not be greater than 20 characters.',
-            'avatar.acceptedimage' => 'Avatar must be an image.',
-            'avatar.acceptedmimes' => 'Avatar must be a file of type: jpg, jpeg, png, gif.',
-            'avatar.acceptedmax' => 'Avatar may not be greater than 2MB.',
+            'email.email' => 'Email must be a valid email address.',
+            'email.unique' => 'This email is already taken.',
+            'phone.max' => 'Phone may not be greater than 20 characters.',
+            'avatar.image' => 'Avatar must be an image.',
+            'avatar.mimes' => 'Avatar must be a file of type: jpg, jpeg, png, gif.',
+            'avatar.max' => 'Avatar may not be greater than 2MB.',
         ];
     }
 }

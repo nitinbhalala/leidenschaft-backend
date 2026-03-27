@@ -24,6 +24,7 @@ class CategoryRequest extends FormRequest
         return [
             'parent_id' => 'nullable|exists:categories,id',
             'name' => 'required|string|max:191',
+            'page' => 'required|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'description' => 'nullable|string',
             'status' => 'nullable|integer|min:0|max:1',
@@ -40,6 +41,8 @@ class CategoryRequest extends FormRequest
             'name.required' => 'Name is required.',
             'name.string' => 'Name must be a string.',
             'name.max' => 'Name may not be greater than 191 characters.',
+            'page.required' => 'Name is required.',
+            'page.string' => 'Name must be a string.',
             'image.image' => 'Image must be an image file.',
             'image.mimes' => 'Image must be a file of type: jpg, jpeg, png, webp.',
             'image.max' => 'Image may not be greater than 5MB.',

@@ -18,6 +18,12 @@ class ProductController extends BaseController
         try {
             $query = Product::with(['category', 'subCategory', 'images']);
 
+            $admin = request()->attributes->get('admin');
+
+            if (!$admin) {
+                $query->where('status', 1);
+            }
+
             if ($request->search) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
@@ -66,18 +72,15 @@ class ProductController extends BaseController
                     'status'              => $request->status ?? 1,
                 ]);
 
-                // Create inventory entry for this product
-                $inventory = ProductInventory::create([
+                ProductInventory::create([
                     'product_id'          => $product->id,
                     'stock'               => $product->stock,
                     'low_stock_threshold' => $request->low_stock_threshold ?? 5,
                     'is_active'           => $product->status == 1,
-                ]);
-                $inventory->updateStockStatus();
+                ])->updateStockStatus();
 
                 if ($request->hasFile('images')) {
                     foreach ($request->file('images') as $image) {
-
                         $path = $image->store("products/{$product->id}", 'public');
 
                         ProductImage::create([
@@ -99,6 +102,12 @@ class ProductController extends BaseController
     public function show(Product $product)
     {
         try {
+            $admin = request()->attributes->get('admin');
+
+            if (!$admin && $product->status != 1) {
+                return $this->error('Product not found', 404);
+            }
+
             $product->load(['category', 'subCategory', 'images', 'reviews']);
 
             return $this->success($product, 'Product fetched successfully');
@@ -118,9 +127,6 @@ class ProductController extends BaseController
 
             $product = DB::transaction(function () use ($request, $product) {
 
-                $oldStock = $product->stock;
-                $oldStatus = $product->status;
-
                 $product->update([
                     'category_id'         => $request->category_id,
                     'sub_category_id'     => $request->sub_category_id,
@@ -134,7 +140,6 @@ class ProductController extends BaseController
                     'status'              => $request->status ?? $product->status,
                 ]);
 
-                // Sync inventory when stock or status changes
                 $inventory = ProductInventory::where('product_id', $product->id)->first();
 
                 if ($inventory) {
@@ -144,35 +149,27 @@ class ProductController extends BaseController
                     ]);
                     $inventory->updateStockStatus();
                 } else {
-                    // If inventory entry doesn't exist yet, create it
-                    $inventory = ProductInventory::create([
+                    ProductInventory::create([
                         'product_id'          => $product->id,
                         'stock'               => $product->stock,
                         'low_stock_threshold' => 5,
                         'is_active'           => $product->status == 1,
-                    ]);
-                    $inventory->updateStockStatus();
+                    ])->updateStockStatus();
                 }
 
-                // Delete specific images if IDs are passed
                 if ($request->has('delete_image_ids')) {
-                    $deleteIds = $request->delete_image_ids;
-
-                    $imagesToDelete = ProductImage::where('product_id', $product->id)
-                        ->whereIn('id', $deleteIds)
+                    $images = ProductImage::where('product_id', $product->id)
+                        ->whereIn('id', $request->delete_image_ids)
                         ->get();
 
-                    foreach ($imagesToDelete as $img) {
-                        $rawImage = $img->getRawOriginal('image');
-                        Storage::disk('public')->delete($rawImage);
+                    foreach ($images as $img) {
+                        Storage::disk('public')->delete($img->getRawOriginal('image'));
                         $img->delete();
                     }
                 }
 
-                // Add new images (append, don't replace all)
                 if ($request->hasFile('images')) {
                     foreach ($request->file('images') as $image) {
-
                         $path = $image->store("products/{$product->id}", 'public');
 
                         ProductImage::create([
@@ -202,16 +199,13 @@ class ProductController extends BaseController
 
             DB::transaction(function () use ($product) {
 
-                // Delete inventory entry for this product
                 ProductInventory::where('product_id', $product->id)->delete();
 
                 foreach ($product->images as $img) {
-                    $rawImage = $img->getRawOriginal('image');
-                    Storage::disk('public')->delete($rawImage);
+                    Storage::disk('public')->delete($img->getRawOriginal('image'));
                     $img->delete();
                 }
 
-                // Delete the entire product image folder
                 Storage::disk('public')->deleteDirectory("products/{$product->id}");
 
                 $product->delete();
@@ -222,38 +216,6 @@ class ProductController extends BaseController
             return $this->error($e->getMessage(), 500);
         }
     }
-
-    /*  public function toggleActive(Product $product)
-    {
-        try {
-            $admin = request()->attributes->get('admin');
-
-            if (!$admin) {
-                return $this->error('Unauthorized. Only admin can update products.', 403);
-            }
-
-            $inventory = ProductInventory::firstOrCreate(
-                ['product_id' => $product->id],
-                [
-                    'stock'               => $product->stock,
-                    'low_stock_threshold' => 5,
-                    'is_active'           => true,
-                ]
-            );
-
-            $inventory->update([
-                'is_active' => !$inventory->is_active,
-            ]);
-
-            $inventory->updateStockStatus();
-
-            $inventory->load(['product.images', 'product.category', 'product.subCategory']);
-
-            return $this->success($inventory, 'Product status toggled successfully');
-        } catch (Exception $e) {
-            return $this->error($e->getMessage(), 500);
-        }
-    } */
 
     public function toggleActive($id)
     {
@@ -271,7 +233,6 @@ class ProductController extends BaseController
                     'status' => $product->status == 1 ? 0 : 1,
                 ]);
 
-                // Sync to inventory table
                 $inventory = ProductInventory::where('product_id', $product->id)->first();
                 if ($inventory) {
                     $inventory->update([

@@ -218,11 +218,7 @@ Route::middleware('customer.token')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Categories (Customer can only view categories)
-    Route::prefix('categories')->group(function () {
-        Route::get('/', [CategoryController::class, 'index']);
-        Route::get('/sub-categories/{id?}', [CategoryController::class, 'subCategories']);
-        Route::get('/{category}', [CategoryController::class, 'show']);
-    });
+
 
     // Contacts
     Route::prefix('contacts')->group(function () {
@@ -347,4 +343,10 @@ Route::middleware('customer.token')->group(function () {
         Route::delete('/{id}', [PaymentController::class, 'destroy']);
         Route::post('/{id}/refund', [PaymentController::class, 'refund']);
     });
+});
+
+Route::prefix('categories')->group(function () {
+    Route::get('/', [CategoryController::class, 'index']);
+    Route::get('/sub-categories/{id?}', [CategoryController::class, 'subCategories']);
+    Route::get('/{category}', [CategoryController::class, 'show']);
 });

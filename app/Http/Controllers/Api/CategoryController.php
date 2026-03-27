@@ -12,12 +12,18 @@ class CategoryController extends BaseController
     public function index()
     {
         try {
-            $categories = Category::whereNull('parent_id')
+            $query = Category::whereNull('parent_id')
                 ->with('children')
                 ->withCount('products')
-                ->withCount('children')
-                ->latest()
-                ->get();
+                ->withCount('children');
+
+            $admin = request()->attributes->get('admin');
+
+            if (!$admin) {
+                $query->where('status', 1);
+            }
+
+            $categories = $query->latest()->get();
 
             return $this->success($categories, 'Categories fetched successfully');
         } catch (Exception $e) {
@@ -31,6 +37,12 @@ class CategoryController extends BaseController
             $query = Category::whereNotNull('parent_id')
                 ->with('parent:id,name')
                 ->withCount('subCategoryProducts as products_count');
+
+            $admin = request()->attributes->get('admin');
+
+            if (!$admin) {
+                $query->where('status', 1);
+            }
 
             if ($id) {
                 $category = Category::find($id);
@@ -65,7 +77,6 @@ class CategoryController extends BaseController
                 $data['image'] = $request->file('image')->store('categories', 'public');
             }
 
-            // Validate parent_id exists if provided
             if (!empty($data['parent_id'])) {
                 $parent = Category::find($data['parent_id']);
 
@@ -86,6 +97,12 @@ class CategoryController extends BaseController
     public function show(Category $category)
     {
         try {
+            $admin = request()->attributes->get('admin');
+
+            if (!$admin && !$category->status) {
+                return $this->error('Category not found', 404);
+            }
+
             $category->load(['parent', 'children.children', 'products']);
             $category->loadCount('products');
 
@@ -126,7 +143,7 @@ class CategoryController extends BaseController
                     $childIds = $this->getAllChildIds($category);
 
                     if (in_array($data['parent_id'], $childIds)) {
-                        return $this->error('Cannot set a child category as parent (circular reference)', 422);
+                        return $this->error('Circular reference not allowed', 422);
                     }
 
                     $parent = Category::find($data['parent_id']);
@@ -175,11 +192,11 @@ class CategoryController extends BaseController
             }
 
             if ($category->children()->count() > 0) {
-                return $this->error('Cannot delete category with subcategories. Delete subcategories first.', 422);
+                return $this->error('Delete subcategories first.', 422);
             }
 
             if ($category->products()->count() > 0) {
-                return $this->error('Cannot delete category with products. Remove or reassign products first.', 422);
+                return $this->error('Remove products first.', 422);
             }
 
             $rawImage = $category->getRawOriginal('image');
