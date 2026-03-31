@@ -22,6 +22,20 @@ class ProductController extends BaseController
 
             if (!$admin) {
                 $query->where('status', 1);
+
+                if ($request->category) {
+                    $query->whereHas('category', function ($q) use ($request) {
+                        $q->where('slug', $request->category)
+                            ->orWhere('name', $request->category);
+                    });
+
+                    if ($request->subCategory) {
+                        $query->whereHas('subCategory', function ($q) use ($request) {
+                            $q->where('slug', $request->subCategory)
+                                ->orWhere('name', $request->subCategory);
+                        });
+                    }
+                }
             }
 
             if ($request->search) {
@@ -42,8 +56,8 @@ class ProductController extends BaseController
             $perPage = $request->per_page ?? 10;
             $products = $query->latest()->paginate($perPage);
 
-            return $this->success($products, 'Products fetched successfully');
-        } catch (Exception $e) {
+            return $this->success($products, 'Products fetched successfully', 200, $admin);
+        } catch (\Exception $e) {
             return $this->error($e->getMessage(), 500);
         }
     }
@@ -99,10 +113,12 @@ class ProductController extends BaseController
         }
     }
 
-    public function show(Product $product)
+    public function show($id)
     {
         try {
             $admin = request()->attributes->get('admin');
+
+            $product = Product::find($id);
 
             if (!$admin && $product->status != 1) {
                 return $this->error('Product not found', 404);
@@ -116,13 +132,19 @@ class ProductController extends BaseController
         }
     }
 
-    public function update(ProductRequest $request, Product $product)
+    public function update(ProductRequest $request, $id)
     {
         try {
             $admin = $request->attributes->get('admin');
 
             if (!$admin) {
                 return $this->error('Unauthorized. Only admin can update products.', 403);
+            }
+
+            $product = Product::find($id);
+
+            if (!$product) {
+                return $this->error('Product not found', 404);
             }
 
             $product = DB::transaction(function () use ($request, $product) {
@@ -147,27 +169,34 @@ class ProductController extends BaseController
                         'stock'     => $product->stock,
                         'is_active' => $product->status == 1,
                     ]);
+
                     $inventory->updateStockStatus();
                 } else {
-                    ProductInventory::create([
+                    $inventory = ProductInventory::create([
                         'product_id'          => $product->id,
                         'stock'               => $product->stock,
                         'low_stock_threshold' => 5,
                         'is_active'           => $product->status == 1,
-                    ])->updateStockStatus();
+                    ]);
+
+                    $inventory->updateStockStatus();
                 }
 
-                if ($request->has('delete_image_ids')) {
+                // Delete Images
+                if ($request->has('delete_image_ids') && is_array($request->delete_image_ids)) {
                     $images = ProductImage::where('product_id', $product->id)
                         ->whereIn('id', $request->delete_image_ids)
                         ->get();
 
                     foreach ($images as $img) {
-                        Storage::disk('public')->delete($img->getRawOriginal('image'));
+                        if ($img->image && Storage::disk('public')->exists($img->image)) {
+                            Storage::disk('public')->delete($img->image);
+                        }
                         $img->delete();
                     }
                 }
 
+                // Upload New Images
                 if ($request->hasFile('images')) {
                     foreach ($request->file('images') as $image) {
                         $path = $image->store("products/{$product->id}", 'public');
@@ -188,7 +217,7 @@ class ProductController extends BaseController
         }
     }
 
-    public function destroy(Product $product)
+    public function destroy($id)
     {
         try {
             $admin = request()->attributes->get('admin');
@@ -196,6 +225,8 @@ class ProductController extends BaseController
             if (!$admin) {
                 return $this->error('Unauthorized. Only admin can delete products.', 403);
             }
+
+            $product = Product::find($id);
 
             DB::transaction(function () use ($product) {
 

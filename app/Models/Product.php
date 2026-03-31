@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -13,6 +14,7 @@ class Product extends Model
         'category_id',
         'sub_category_id',
         'name',
+        'slug',
         'sku',
         'description',
         'delivery_returns',
@@ -27,6 +29,34 @@ class Product extends Model
         'category_id' => 'integer',
         'sub_category_id' => 'integer',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($product) {
+            if ($product->isDirty('name') || !$product->slug) {
+                $product->slug = self::generateUniqueSlug($product->name, $product->id);
+            }
+        });
+    }
+
+    public static function generateUniqueSlug($name, $ignoreId = null)
+    {
+        $slug = Str::slug($name);
+        $originalSlug = $slug;
+        $count = 1;
+
+        while (
+            self::where('slug', $slug)
+            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+            ->exists()
+        ) {
+            $slug = $originalSlug . '-' . $count++;
+        }
+
+        return $slug;
+    }
 
     public function category()
     {

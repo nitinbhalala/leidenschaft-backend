@@ -22,6 +22,9 @@ use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\Api\EmailTemplateController;
+use App\Http\Controllers\Api\OfferController;
+use App\Http\Controllers\Api\OfferTemplateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -73,20 +76,40 @@ Route::prefix('admin')->group(function () {
             Route::post('/', [CategoryController::class, 'store']);
             Route::get('/sub-categories/{id?}', [CategoryController::class, 'subCategories']);
             Route::get('/{category}', [CategoryController::class, 'show']);
-            Route::post('/{category}', [CategoryController::class, 'update']);
-            Route::delete('/{category}', [CategoryController::class, 'destroy']);
-            Route::post('/{category}/toggle-status', [CategoryController::class, 'toggleStatus']);
+            Route::post('/{id}', [CategoryController::class, 'update']);
+            Route::delete('/{id}', [CategoryController::class, 'destroy']);
+            Route::post('/{id}/toggle-status', [CategoryController::class, 'toggleStatus']);
+        });
+
+        // Offers
+        Route::prefix('offers')->group(function () {
+            Route::get('/', [OfferController::class, 'index']);
+            Route::post('/', [OfferController::class, 'store']);
+            Route::get('/{offer}', [OfferController::class, 'show']);
+            Route::post('/{id}', [OfferController::class, 'update']);
+            Route::delete('/{id}', [OfferController::class, 'destroy']);
+            Route::post('/{id}/toggle-status', [OfferController::class, 'toggleStatus']);
+        });
+
+        // Offer Templates
+        Route::prefix('offers-templates')->group(function () {
+            Route::get('/', [OfferTemplateController::class, 'index']);
+            Route::post('/', [OfferTemplateController::class, 'store']);
+            Route::get('/{id}', [OfferTemplateController::class, 'show']);
+            Route::post('/{id}', [OfferTemplateController::class, 'update']);
+            Route::delete('/{id}', [OfferTemplateController::class, 'destroy']);
+            Route::post('/{id}/toggle-status', [OfferTemplateController::class, 'toggleStatus']);
         });
 
         // Products
         Route::prefix('products')->group(function () {
             Route::get('/', [ProductController::class, 'index']);
             Route::post('/', [ProductController::class, 'store']);
-            Route::get('/{product}', [ProductController::class, 'show']);
-            Route::post('/{product}', [ProductController::class, 'update']);
-            Route::delete('/{product}', [ProductController::class, 'destroy']);
-            Route::get('/{product_id}/reviews', [ProductReviewController::class, 'index']);
+            Route::get('/{id}/reviews', [ProductReviewController::class, 'index']);
             Route::post('/{id}/toggle-status', [ProductController::class, 'toggleActive']);
+            Route::get('/{id}', [ProductController::class, 'show']);
+            Route::post('/{id}', [ProductController::class, 'update']);
+            Route::delete('/{id}', [ProductController::class, 'destroy']);
         });
 
         // Product Reviews
@@ -193,6 +216,15 @@ Route::prefix('admin')->group(function () {
             Route::post('/read/{id?}', [NotificationController::class, 'read']);
         });
 
+        // Email Templates
+        Route::prefix('email-templates')->group(function () {
+            Route::get('/', [EmailTemplateController::class, 'index']);
+            Route::post('/', [EmailTemplateController::class, 'store']);
+            Route::get('/{id}', [EmailTemplateController::class, 'show']);
+            Route::post('/{id}', [EmailTemplateController::class, 'update']);
+            Route::delete('/{id}', [EmailTemplateController::class, 'destroy']);
+        });
+
         // Error Logs
         Route::prefix('error-logs')->group(function () {
             Route::get('/', [ErrorLogController::class, 'index']);
@@ -213,82 +245,6 @@ Route::middleware('customer.token')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/verify-token', [AuthController::class, 'verifyToken']);
     Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
-
-    // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index']);
-
-    // Categories (Customer can only view categories)
-
-
-    // Contacts
-    Route::prefix('contacts')->group(function () {
-        Route::get('/', [ContactController::class, 'index']);
-        Route::post('/', [ContactController::class, 'store']);
-        Route::get('/{contact}', [ContactController::class, 'show']);
-        Route::put('/{contact}', [ContactController::class, 'update']);
-        Route::delete('/{contact}', [ContactController::class, 'destroy']);
-    });
-
-    // Products (Customer can only view products)
-    Route::prefix('products')->group(function () {
-        Route::get('/', [ProductController::class, 'index']);
-        Route::get('/{product}', [ProductController::class, 'show']);
-        Route::get('/{product_id}/reviews', [ProductReviewController::class, 'index']);
-    });
-
-    // Product Reviews
-    Route::prefix('product-reviews')->group(function () {
-        Route::post('/', [ProductReviewController::class, 'store']);
-        Route::delete('/{productReview}', [ProductReviewController::class, 'destroy']);
-    });
-
-    // Error Logs
-    Route::prefix('error-logs')->group(function () {
-        Route::get('/', [ErrorLogController::class, 'index']);
-        Route::get('/{id}', [ErrorLogController::class, 'show']);
-        Route::post('/', [ErrorLogController::class, 'store']);
-        Route::patch('/{id}/resolve', [ErrorLogController::class, 'markResolved']);
-        Route::delete('/{id}', [ErrorLogController::class, 'destroy']);
-    });
-
-    // Notifications
-    Route::prefix('notifications')->group(function () {
-        Route::get('/', [NotificationController::class, 'index']);
-        Route::post('/', [NotificationController::class, 'store']);
-        Route::get('/{notification}', [NotificationController::class, 'show']);
-        Route::put('/{notification}', [NotificationController::class, 'update']);
-        Route::delete('/{notification}', [NotificationController::class, 'destroy']);
-        Route::post('/read/{id?}', [NotificationController::class, 'read']);
-    });
-
-    // FAQs
-    Route::prefix('faqs')->group(function () {
-        Route::get('/', [FaqController::class, 'index']);
-        Route::post('/', [FaqController::class, 'store']);
-        Route::get('/{faq}', [FaqController::class, 'show']);
-        Route::put('/{faq}', [FaqController::class, 'update']);
-        Route::delete('/{faq}', [FaqController::class, 'destroy']);
-    });
-
-    // Blogs
-    Route::prefix('blogs')->group(function () {
-        Route::get('/', [BlogController::class, 'index']);
-        Route::post('/', [BlogController::class, 'store']);
-        Route::get('/{blog}', [BlogController::class, 'show']);
-        Route::put('/{blog}', [BlogController::class, 'update']);
-        Route::delete('/{blog}', [BlogController::class, 'destroy']);
-    });
-
-    // Product Inventory
-    Route::prefix('inventory')->group(function () {
-        Route::get('/', [ProductInventoryController::class, 'index']);
-        Route::get('/stats', [ProductInventoryController::class, 'stats']);
-        Route::get('/{id}', [ProductInventoryController::class, 'show']);
-        Route::post('/{id}/increase-stock', [ProductInventoryController::class, 'increaseStock']);
-        Route::post('/{id}/decrease-stock', [ProductInventoryController::class, 'decreaseStock']);
-        Route::post('/{id}/update-stock', [ProductInventoryController::class, 'updateStock']);
-        Route::post('/{id}/toggle-status', [ProductInventoryController::class, 'toggleActive']);
-    });
 
     // Customers
     Route::prefix('customers')->group(function () {
@@ -316,15 +272,6 @@ Route::middleware('customer.token')->group(function () {
     Route::post('/add-to-wishlist', [WishlistController::class, 'addToWishlist']);
     Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
 
-    // Policies
-    Route::prefix('policies')->group(function () {
-        Route::get('/', [PolicyController::class, 'index']);
-        Route::post('/', [PolicyController::class, 'store']);
-        Route::get('/{policy}', [PolicyController::class, 'show']);
-        Route::put('/{policy}', [PolicyController::class, 'update']);
-        Route::delete('/{policy}', [PolicyController::class, 'destroy']);
-    });
-
     // Orders
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'index']);
@@ -345,8 +292,41 @@ Route::middleware('customer.token')->group(function () {
     });
 });
 
+Route::post('/contact/store', [ContactController::class, 'store']);
+
 Route::prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index']);
     Route::get('/sub-categories/{id?}', [CategoryController::class, 'subCategories']);
     Route::get('/{category}', [CategoryController::class, 'show']);
 });
+
+Route::prefix('offers')->group(function () {
+    Route::get('/', [OfferController::class, 'index']);
+    Route::get('/{offer}', [OfferController::class, 'show']);
+});
+
+Route::prefix('offer-templates')->group(function () {
+    Route::get('/', [OfferTemplateController::class, 'index']);
+    Route::get('/{id}', [OfferTemplateController::class, 'show']);
+});
+
+Route::prefix('products')->group(function () {
+    Route::get('/', [ProductController::class, 'index']);
+    Route::get('/{product:slug}', [ProductController::class, 'show']);
+    Route::get('/{product_id}/reviews', [ProductReviewController::class, 'index']);
+});
+
+Route::prefix('product-reviews')->group(function () {
+    Route::post('/', [ProductReviewController::class, 'store']);
+    Route::delete('/{productReview}', [ProductReviewController::class, 'destroy']);
+});
+
+Route::get('/faqs', [FaqController::class, 'index']);
+
+Route::get('/blogs', [BlogController::class, 'index']);
+Route::get('/{blog}', [BlogController::class, 'show']);
+
+Route::get('/policies/{policy}', [PolicyController::class, 'show']);
+
+Route::get('/setting/footer', [SettingController::class, 'getFooterSettings']);
+Route::get('/setting/{key}', [SettingController::class, 'getByKey']);

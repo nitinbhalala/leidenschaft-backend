@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CategoryRequest extends FormRequest
 {
@@ -21,12 +22,20 @@ class CategoryRequest extends FormRequest
      */
     public function rules(): array
     {
+        $categoryId = $this->route('id');
+
         return [
             'parent_id' => 'nullable|exists:categories,id',
-            'name' => 'required|string|max:191',
+            'name' => [
+                'required',
+                'string',
+                'max:191',
+                Rule::unique('categories', 'name')->ignore($categoryId),
+            ],
             'page' => 'required|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'description' => 'nullable|string',
+            'show_in_navbar' => 'nullable|integer|min:0|max:1',
             'status' => 'nullable|integer|min:0|max:1',
         ];
     }
@@ -41,6 +50,7 @@ class CategoryRequest extends FormRequest
             'name.required' => 'Name is required.',
             'name.string' => 'Name must be a string.',
             'name.max' => 'Name may not be greater than 191 characters.',
+            'name.unique' => 'This category name already exists.',
             'page.required' => 'Name is required.',
             'page.string' => 'Name must be a string.',
             'image.image' => 'Image must be an image file.',
@@ -50,6 +60,9 @@ class CategoryRequest extends FormRequest
             'status.integer' => 'Status must be a number.',
             'status.min' => 'Status must be at least 0.',
             'status.max' => 'Status may not be greater than 1.',
+            'show_in_navbar.integer' => 'Show in navbar must be a number.',
+            'show_in_navbar.min' => 'Show in navbar must be at least 0.',
+            'show_in_navbar.max' => 'Show in navbar may not be greater than 1.',
         ];
     }
 }

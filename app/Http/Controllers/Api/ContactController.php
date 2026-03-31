@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\BaseController;
 use App\Models\Contact;
 use App\Http\Requests\ContactRequest;
 use Illuminate\Http\Request;
 
-class ContactController extends Controller
+class ContactController extends BaseController
 {
     public function index(Request $request)
     {
@@ -30,41 +30,36 @@ class ContactController extends Controller
         $perPage = $request->per_page ?? 10;
         $contacts = $query->paginate($perPage);
 
-        // Transform contact_method from JSON string to array
         $contacts->getCollection()->transform(function ($contact) {
             return $this->formatContact($contact);
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $contacts
-        ]);
+        return $this->success($contacts, "Contacts fetched successfully", 200, true);
     }
 
     public function store(ContactRequest $request)
     {
         $data = $request->validated();
 
-        // Store contact_method as JSON
         if (isset($data['contact_method']) && is_array($data['contact_method'])) {
             $data['contact_method'] = json_encode($data['contact_method']);
         }
 
         $contact = Contact::create($data);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message sent successfully',
-            'data' => $this->formatContact($contact)
-        ], 201);
+        return $this->success(
+            $this->formatContact($contact),
+            "Message sent successfully",
+            201
+        );
     }
 
     public function show(Contact $contact)
     {
-        return response()->json([
-            'success' => true,
-            'data' => $this->formatContact($contact)
-        ]);
+        return $this->success(
+            $this->formatContact($contact),
+            "Contact fetched successfully"
+        );
     }
 
     public function update(ContactRequest $request, Contact $contact)
@@ -77,34 +72,29 @@ class ContactController extends Controller
 
         $contact->update($data);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Contact updated successfully',
-            'data' => $this->formatContact($contact)
-        ]);
+        return $this->success(
+            $this->formatContact($contact),
+            "Contact updated successfully"
+        );
     }
 
     public function destroy(Contact $contact)
     {
         $contact->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Contact deleted successfully'
-        ]);
+        return $this->success(null, "Contact deleted successfully");
     }
 
     public function stats()
     {
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total_contacts'   => Contact::count(),
-                'new_contacts'     => Contact::where('status', 'New')->count(),
-                'replied_contacts' => Contact::where('status', 'Replied')->count(),
-                'archived_contacts' => Contact::where('status', 'Archived')->count(),
-            ]
-        ]);
+        $data = [
+            'total_contacts'    => Contact::count(),
+            'new_contacts'      => Contact::where('status', 'New')->count(),
+            'replied_contacts'  => Contact::where('status', 'Replied')->count(),
+            'archived_contacts' => Contact::where('status', 'Archived')->count(),
+        ];
+
+        return $this->success($data, "Contact stats fetched successfully");
     }
 
     private function formatContact(Contact $contact): array

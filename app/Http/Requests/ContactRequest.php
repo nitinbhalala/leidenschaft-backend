@@ -25,9 +25,11 @@ class ContactRequest extends FormRequest
             'first_name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'email' => 'required|email|max:255',
-            'contact_method' => 'nullable|in:email,phone,sms',
+            'contact_method' => 'nullable|array',
+            'contact_method.*' => 'in:email,phone,sms',
             'phone' => 'nullable|string|max:20',
-            'comment' => 'required|string|max:2000'
+            'subject' => 'required|string|max:1000',
+            'message' => 'required|string|max:2000'
         ];
     }
 
@@ -42,12 +44,16 @@ class ContactRequest extends FormRequest
             'email.required' => 'Email is required.',
             'email.email' => 'Email must be a valid email address.',
             'email.max' => 'Email may not be greater than 255 characters.',
-            'contact_method.in' => 'Contact method must be email, phone, or sms.',
+            'contact_method' => 'nullable|array',
+            'contact_method.*' => 'in:email,phone,sms',
             'phone.string' => 'Phone must be a string.',
             'phone.max' => 'Phone may not be greater than 20 characters.',
-            'comment.required' => 'Comment is required.',
-            'comment.string' => 'Comment must be a string.',
-            'comment.max' => 'Comment may not be greater than 2000 characters.',
+            'subject.required' => 'Subject is required.',
+            'subject.string' => 'Subject must be a string.',
+            'subject.max' => 'Subject may not be greater than 1000 characters.',
+            'message.required' => 'Comment is required.',
+            'message.string' => 'Comment must be a string.',
+            'message.max' => 'Comment may not be greater than 2000 characters.',
         ];
     }
 }

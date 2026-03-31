@@ -112,7 +112,7 @@ class CategoryController extends BaseController
         }
     }
 
-    public function update(CategoryRequest $request, Category $category)
+    public function update(CategoryRequest $request, $id)
     {
         try {
             $admin = $request->attributes->get('admin');
@@ -122,6 +122,8 @@ class CategoryController extends BaseController
             }
 
             $data = $request->validated();
+
+            $category = Category::find($id);
 
             if ($request->hasFile('image')) {
 
@@ -163,7 +165,7 @@ class CategoryController extends BaseController
         }
     }
 
-    public function toggleStatus(Category $category)
+    public function toggleStatus($id)
     {
         try {
             $admin = request()->attributes->get('admin');
@@ -171,6 +173,8 @@ class CategoryController extends BaseController
             if (!$admin) {
                 return $this->error('Unauthorized. Only admin can update category status.', 403);
             }
+
+            $category = Category::find($id);
 
             $category->update([
                 'status' => !$category->status
@@ -182,13 +186,19 @@ class CategoryController extends BaseController
         }
     }
 
-    public function destroy(Category $category)
+    public function destroy($id)
     {
         try {
             $admin = request()->attributes->get('admin');
 
             if (!$admin) {
                 return $this->error('Unauthorized. Only admin can delete categories.', 403);
+            }
+
+            $category = Category::find($id);
+
+            if (!$category) {
+                return $this->error('Category not found', 404);
             }
 
             if ($category->children()->count() > 0) {

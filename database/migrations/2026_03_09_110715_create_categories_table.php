@@ -19,7 +19,10 @@ return new class extends Migration
                 ->nullOnDelete();
             $table->string('image')->nullable();
             $table->string('name');
+            $table->string('slug')->unique();
+            $table->string('page')->nullable();
             $table->text('description')->nullable();
+            $table->integer('show_in_navbar')->default(0);
             $table->integer('status')->default(1);
             $table->timestamps();
         });

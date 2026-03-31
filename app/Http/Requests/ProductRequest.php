@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductRequest extends FormRequest
 {
@@ -21,10 +22,17 @@ class ProductRequest extends FormRequest
      */
     public function rules(): array
     {
+        $productId = $this->route('id');
+
         return [
             'category_id' => 'required|exists:categories,id',
             'sub_category_id' => 'nullable|exists:categories,id',
-            'name' => 'required|string|max:255',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('categories', 'name')->ignore($productId),
+            ],
             'sku'  => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'delivery_returns' => 'nullable|string',
@@ -51,6 +59,7 @@ class ProductRequest extends FormRequest
             'name.required' => 'Name is required.',
             'name.string' => 'Name must be a string.',
             'name.max' => 'Name may not be greater than 255 characters.',
+            'name.unique' => 'This product name already exists.',
             'sku.string' => 'SKU must be a string.',
             'sku.max' => 'SKU may not be greater than 100 characters.',
             'description.string' => 'Description must be a string.',

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('status', ['draft', 'published', 'scheduled'])->default('draft');
             $table->text('excerpt')->nullable();
             $table->longText('content');
+            $table->string('image')->nullable();
             $table->integer('views')->default(0);
             $table->timestamps();
             $table->foreign('category_id')

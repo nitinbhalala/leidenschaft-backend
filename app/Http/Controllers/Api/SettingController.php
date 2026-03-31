@@ -126,4 +126,37 @@ class SettingController extends BaseController
             return $this->error('Error deleting setting', 500, $e->getMessage());
         }
     }
+
+    public function getFooterSettings()
+    {
+        try {
+            $keys = [
+                'store_name',
+                'store_address',
+                'store_email',
+                'store_phone',
+                'youtube_url',
+                'linkedin_url',
+                'instagram_url',
+            ];
+
+            $settings = Setting::whereIn('key', $keys)
+                ->get()
+                ->pluck('value', 'key');
+
+            $response = [
+                'store_name'    => $settings['store_name'] ?? '',
+                'store_address' => $settings['store_address'] ?? '',
+                'store_email'   => $settings['store_email'] ?? '',
+                'store_phone'   => $settings['store_phone'] ?? '',
+                'youtube_url'   => $settings['youtube_url'] ?? '',
+                'linkedin_url'   => $settings['linkedin_url'] ?? '',
+                'instagram_url'   => $settings['instagram_url'] ?? '',
+            ];
+
+            return $this->success($response, 'Footer settings fetched successfully');
+        } catch (\Exception $e) {
+            return $this->error('Error fetching footer settings', 500, $e->getMessage());
+        }
+    }
 }

@@ -15,6 +15,8 @@ class BlogController extends BaseController
         try {
             $query = Blog::query();
 
+            $admin = $request->attributes->get('admin');
+
             if ($request->search) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
@@ -24,7 +26,9 @@ class BlogController extends BaseController
                 });
             }
 
-            if ($request->status && $request->status !== 'all') {
+            if (!$admin) {
+                $query->where('status', 1);
+            } elseif ($request->status && $request->status !== 'all') {
                 $query->where('status', $request->status);
             }
 
@@ -39,68 +43,108 @@ class BlogController extends BaseController
 
     public function store(BlogRequest $request)
     {
-        $data = $request->validated();
+        try {
+            $admin = $request->attributes->get('admin');
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('blogs', 'public');
-            $data['image'] = $path;
+            if (!$admin) {
+                return $this->error("Unauthorized. Only admin can create blog.", 403);
+            }
+
+            $data = $request->validated();
+
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('blogs', 'public');
+                $data['image'] = $path;
+            }
+
+            $blog = Blog::create($data);
+
+            return $this->success($blog, "Blog created successfully", 201);
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
         }
-
-        $blog = Blog::create($data);
-
-        return $this->success($blog, "Blog created successfully", 201);
     }
 
     public function show($id)
     {
-        $blog = Blog::find($id);
+        try {
+            $blog = Blog::find($id);
 
-        if (!$blog) {
-            return $this->error("Blog not found", 404);
+            if (!$blog) {
+                return $this->error("Blog not found", 404);
+            }
+
+            $admin = request()->attributes->get('admin');
+
+            if (!$admin && isset($blog->status) && !$blog->status) {
+                return $this->error("Blog not found", 404);
+            }
+
+            return $this->success($blog, "Blog fetched successfully");
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
         }
-
-        return $this->success($blog, "Blog fetched successfully");
     }
 
     public function update(BlogRequest $request, $id)
     {
-        $blog = Blog::find($id);
+        try {
+            $admin = $request->attributes->get('admin');
 
-        if (!$blog) {
-            return $this->error("Blog not found", 404);
-        }
-
-        $data = $request->validated();
-
-        if ($request->hasFile('image')) {
-            if ($blog->getRawOriginal('image') && $blog->getRawOriginal('image') !== 'default') {
-                Storage::disk('public')->delete($blog->getRawOriginal('image'));
+            if (!$admin) {
+                return $this->error("Unauthorized. Only admin can update blog.", 403);
             }
 
-            $path = $request->file('image')->store("blogs/{$blog->id}", 'public');
-            $data['image'] = $path;
+            $blog = Blog::find($id);
+
+            if (!$blog) {
+                return $this->error("Blog not found", 404);
+            }
+
+            $data = $request->validated();
+
+            if ($request->hasFile('image')) {
+                if ($blog->getRawOriginal('image') && $blog->getRawOriginal('image') !== 'default') {
+                    Storage::disk('public')->delete($blog->getRawOriginal('image'));
+                }
+
+                $path = $request->file('image')->store("blogs/{$blog->id}", 'public');
+                $data['image'] = $path;
+            }
+
+            $blog->update($data);
+
+            return $this->success($blog->fresh(), "Blog updated successfully");
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
         }
-
-        $blog->update($data);
-
-        return $this->success($blog->fresh(), "Blog updated successfully");
     }
 
     public function destroy($id)
     {
-        $blog = Blog::find($id);
+        try {
+            $admin = request()->attributes->get('admin');
 
-        if (!$blog) {
-            return $this->error("Blog not found", 404);
+            if (!$admin) {
+                return $this->error("Unauthorized. Only admin can delete blog.", 403);
+            }
+
+            $blog = Blog::find($id);
+
+            if (!$blog) {
+                return $this->error("Blog not found", 404);
+            }
+
+            if ($blog->getRawOriginal('image') && $blog->getRawOriginal('image') !== 'default') {
+                Storage::disk('public')->delete($blog->getRawOriginal('image'));
+                Storage::disk('public')->deleteDirectory("blogs/{$blog->id}");
+            }
+
+            $blog->delete();
+
+            return $this->success(null, "Blog deleted successfully");
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
         }
-
-        if ($blog->getRawOriginal('image') && $blog->getRawOriginal('image') !== 'default') {
-            Storage::disk('public')->delete($blog->getRawOriginal('image'));
-            Storage::disk('public')->deleteDirectory("blogs/{$blog->id}");
-        }
-
-        $blog->delete();
-
-        return $this->success(null, "Blog deleted successfully");
     }
 }
