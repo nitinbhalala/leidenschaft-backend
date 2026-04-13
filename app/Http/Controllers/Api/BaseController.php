@@ -7,17 +7,15 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class BaseController extends Controller
 {
-    protected function success($data = null, $message = "Success", $status = 200, $admin = false)
+    protected function success($data = null, $message = "Success", $status = 200)
     {
         if ($data instanceof LengthAwarePaginator) {
-            if ($admin) {
-                $data = [
-                    'current_page' => $data->currentPage(),
-                    'per_page'     => $data->perPage(),
-                    'total'        => $data->total(),
-                    'data'         => $data->items(),
-                ];
-            }
+            $data = [
+                'current_page' => $data->currentPage(),
+                'per_page'     => $data->perPage(),
+                'total'        => $data->total(),
+                'data'         => $data->items(),
+            ];
         }
 
         return response()->json([

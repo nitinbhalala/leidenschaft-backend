@@ -34,7 +34,7 @@ class ContactController extends BaseController
             return $this->formatContact($contact);
         });
 
-        return $this->success($contacts, "Contacts fetched successfully", 200, true);
+        return $this->success($contacts, "Contacts fetched successfully", 200);
     }
 
     public function store(ContactRequest $request)
