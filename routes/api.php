@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\OfferController;
+use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\OfferTemplateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -57,7 +58,7 @@ Route::prefix('admin')->group(function () {
     Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login');
 
     Route::middleware('admin.token')->group(function () {
-        Route::post('/logout', [AdminAuthController::class, 'logout']);
+        Route::post('/admin-logout', [AdminAuthController::class, 'logout']);
         Route::get('/verify-token', [AdminAuthController::class, 'verifyToken']);
         Route::post('/refresh-token', [AdminAuthController::class, 'refreshToken']);
 
@@ -149,6 +150,7 @@ Route::prefix('admin')->group(function () {
             Route::get('/{customer_address}', [CustomerAddressController::class, 'show']);
             Route::put('/{customer_address}', [CustomerAddressController::class, 'update']);
             Route::delete('/{customer_address}', [CustomerAddressController::class, 'destroy']);
+            Route::patch('/{customer_address}/set-default', [CustomerAddressController::class, 'setDefault']);
         });
 
         // Payments
@@ -257,11 +259,12 @@ Route::middleware('customer.token')->group(function () {
 
     // Customer Addresses
     Route::prefix('customer-address')->group(function () {
-        Route::get('/', [CustomerAddressController::class, 'index']);
+        Route::get('/{customer_id}', [CustomerAddressController::class, 'index']);
         Route::post('/', [CustomerAddressController::class, 'store']);
-        Route::get('/{customer_address}', [CustomerAddressController::class, 'show']);
-        Route::put('/{customer_address}', [CustomerAddressController::class, 'update']);
-        Route::delete('/{customer_address}', [CustomerAddressController::class, 'destroy']);
+        Route::get('/show/{id}', [CustomerAddressController::class, 'show']);
+        Route::put('/{id}', [CustomerAddressController::class, 'update']);
+        Route::delete('/{id}', [CustomerAddressController::class, 'destroy']);
+        Route::post('/{id}/set-default', [CustomerAddressController::class, 'setDefault']);
     });
 
     // Cart
@@ -322,6 +325,12 @@ Route::prefix('product-reviews')->group(function () {
 });
 
 Route::get('/faqs', [FaqController::class, 'index']);
+
+Route::prefix('locations')->group(function () {
+    Route::get('/countries', [LocationController::class, 'countries']);
+    Route::get('/states/{country_id}', [LocationController::class, 'states']);
+    Route::get('/cities/{state_id}', [LocationController::class, 'cities']);
+});
 
 Route::get('/blogs', [BlogController::class, 'index']);
 Route::get('/{blog}', [BlogController::class, 'show']);

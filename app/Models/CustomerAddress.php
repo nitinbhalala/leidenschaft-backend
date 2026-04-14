@@ -15,9 +15,9 @@ class CustomerAddress extends Model
         'phone',
         'address_line1',
         'address_line2',
-        'city',
-        'state',
-        'country',
+        'city_id',
+        'state_id',
+        'country_id',
         'pincode',
         'is_default',
         'type'

@@ -113,12 +113,10 @@ class ProductController extends BaseController
         }
     }
 
-    public function show($id)
+    public function show(Product $product)
     {
         try {
             $admin = request()->attributes->get('admin');
-
-            $product = Product::find($id);
 
             if (!$admin && $product->status != 1) {
                 return $this->error('Product not found', 404);

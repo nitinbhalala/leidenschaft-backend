@@ -21,6 +21,7 @@ class Customer extends Authenticatable
         'provider_id',
         'avatar',
         'token',
+        'token_expires_at',
     ];
 
     protected $hidden = [
