@@ -19,6 +19,7 @@ class AuthController extends BaseController
         $customer = Customer::create([
             'name'     => $request->name,
             'email'    => $request->email,
+            'phone'    => $request->phone,
             'password' => Hash::make($request->password),
         ]);
 

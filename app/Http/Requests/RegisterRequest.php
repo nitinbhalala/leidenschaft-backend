@@ -24,7 +24,8 @@ class RegisterRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:customers,email',
-            'password' => 'required|string|min:8|confirmed',
+            'phone' => 'nullable|string',
+            'password' => 'required|string|min:8',
         ];
     }
 
@@ -39,10 +40,11 @@ class RegisterRequest extends FormRequest
             'email.email' => 'Email must be a valid email address.',
             'email.max' => 'Email may not be greater than 255 characters.',
             'email.unique' => 'This email is already taken.',
+            'phone.string' => 'Phone must be a string.',
+            'phone.max' => 'Phone may not be greater than 20 characters.',
             'password.required' => 'Password is required.',
             'password.string' => 'Password must be a string.',
             'password.min' => 'Password must be at least 8 characters.',
-            'password.confirmed' => 'Password confirmation does not match.',
         ];
     }
 }

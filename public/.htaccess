@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # Handle OPTIONS preflight requests
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -23,3 +27,19 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# CORS for production
+<If "%{HTTP:Origin} == 'https://leidenschaft-admin.vercel.app'">
+    Header always set Access-Control-Allow-Origin "https://leidenschaft-admin.vercel.app"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN, Accept"
+    Header always set Access-Control-Allow-Credentials "true"
+</If>
+
+# CORS for localhost
+<If "%{HTTP:Origin} == 'http://localhost:3000'">
+    Header always set Access-Control-Allow-Origin "http://localhost:3000"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN, Accept"
+    Header always set Access-Control-Allow-Credentials "true"
+</If>
