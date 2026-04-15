@@ -11,21 +11,28 @@ use Throwable;
 
 class SocialAuthController extends BaseController
 {
-    public function redirect(string $provider)
+    public function redirect(string $provider, \Illuminate\Http\Request $request)
     {
         $this->validateProvider($provider);
 
-        return Socialite::driver($provider)->stateless()->redirect();
+        $frontendUrl = rtrim($request->header('Origin', $request->header('Referer', '')), '/');
+
+        return Socialite::driver($provider)
+            ->stateless()
+            ->with(['state' => $frontendUrl])
+            ->redirect();
     }
 
-    public function callback(string $provider)
+    public function callback(string $provider, \Illuminate\Http\Request $request)
     {
         $this->validateProvider($provider);
+
+        $frontendUrl = rtrim($request->input('state', ''), '/');
 
         try {
             $socialUser = Socialite::driver($provider)->stateless()->user();
         } catch (Throwable $e) {
-            return redirect("http://localhost:3000/social-callback?error=" . urlencode($e->getMessage()));
+            return redirect($frontendUrl . '/social-callback?error=' . urlencode($e->getMessage()));
         }
 
         $customer = Customer::where('provider_id', $socialUser->getId())
@@ -56,7 +63,21 @@ class SocialAuthController extends BaseController
             'token_expires_at' => Carbon::now()->addDays(7),
         ]);
 
-        return redirect("http://localhost:3000/social-callback?token={$token}&expires_at=" . Carbon::now()->addDays(7)->toDateTimeString());
+        $refreshToken     = Str::random(128);
+        $refreshExpiresAt = Carbon::now()->addDays(30);
+
+        $customer->update([
+            'refresh_token'            => $refreshToken,
+            'refresh_token_expires_at' => $refreshExpiresAt,
+        ]);
+
+        return redirect(
+            $frontendUrl . '/social-callback'
+                . '?token=' . $token
+                . '&token_expires_at=' . Carbon::now()->addDays(7)->toDateTimeString()
+                . '&refresh_token=' . $refreshToken
+                . '&refresh_token_expires_at=' . $refreshExpiresAt->toDateTimeString()
+        );
     }
 
     private function validateProvider(string $provider): void

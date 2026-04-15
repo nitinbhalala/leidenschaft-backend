@@ -243,10 +243,14 @@ Route::prefix('admin')->group(function () {
 | Auth Routes (Authenticated only - Customer)
 |--------------------------------------------------------------------------
 */
+Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
 Route::middleware('customer.token')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/verify-token', [AuthController::class, 'verifyToken']);
-    Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
+    Route::post('/update-profile', [AuthController::class, 'updateProfile']);
 
     // Customers
     Route::prefix('customers')->group(function () {
@@ -315,6 +319,7 @@ Route::prefix('offer-templates')->group(function () {
 
 Route::prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index']);
+    Route::get('/search', [ProductController::class, 'search']);
     Route::get('/{product:slug}', [ProductController::class, 'show']);
     Route::get('/{product_id}/reviews', [ProductReviewController::class, 'index']);
 });

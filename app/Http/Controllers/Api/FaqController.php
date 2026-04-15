@@ -12,7 +12,7 @@ class FaqController extends BaseController
     public function index()
     {
         try {
-            $query = Faq::latest();
+            $query = Faq::query();
 
             $admin = request()->attributes->get('admin');
 

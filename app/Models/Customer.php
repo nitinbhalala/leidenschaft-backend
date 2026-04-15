@@ -22,11 +22,16 @@ class Customer extends Authenticatable
         'avatar',
         'token',
         'token_expires_at',
+        'refresh_token',
+        'refresh_token_expires_at',
+        'password_reset_token',
+        'password_reset_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'refresh_token',
     ];
 
     protected $casts = [

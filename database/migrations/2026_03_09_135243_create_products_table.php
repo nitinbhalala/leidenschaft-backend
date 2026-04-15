@@ -21,6 +21,7 @@ return new class extends Migration
                 ->constrained('categories')
                 ->nullOnDelete();
             $table->string('name');
+            $table->string('slug')->nullable()->unique();
             $table->string('sku')->nullable()->unique();
             $table->text('description')->nullable();
             $table->text('delivery_returns')->nullable();
