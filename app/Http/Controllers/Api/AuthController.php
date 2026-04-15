@@ -71,8 +71,8 @@ class AuthController extends BaseController
 
         $token              = Str::random(64);
         $refreshToken       = Str::random(128);
-        $tokenExpiresAt   = Carbon::now()->addMinute();
-        $refreshExpiresAt = Carbon::now()->addMinutes(2);
+        $tokenExpiresAt     = Carbon::now()->addDay();
+        $refreshExpiresAt   = Carbon::now()->addDays(30);
 
         $customer->update([
             'token'                    => $token,
