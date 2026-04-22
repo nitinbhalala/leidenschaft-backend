@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin.token'    => \App\Http\Middleware\AdminTokenMiddleware::class,
             'customer.token' => \App\Http\Middleware\CustomerTokenMiddleware::class,
+            'role'           => \App\Http\Middleware\AdminRoleMiddleware::class,
+            'permission'     => \App\Http\Middleware\RolePermissionMiddleware::class,
         ]);
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
     })

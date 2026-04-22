@@ -9,7 +9,9 @@ return [
         'https://leidenschaft-admin.vercel.app',
         'https://leidenschaft-frontend.vercel.app',
         'http://localhost:3000',
-        'http://192.168.29.152:3000'
+        'http://localhost:3001',
+        'http://192.168.29.152:3000',
+        'http://192.168.29.152:3001'
     ],
 
     'allowed_origins_patterns' => [],

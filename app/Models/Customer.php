@@ -38,6 +38,11 @@ class Customer extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function getAvatarAttribute($value)
+    {
+        return $value ? asset('storage/' . $value) : null;
+    }
+
     public function addresses()
     {
         return $this->hasMany(CustomerAddress::class);

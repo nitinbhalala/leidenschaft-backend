@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AdminAuthController;
+use App\Http\Controllers\Api\Admin\PermissionController;
 use App\Http\Controllers\Api\Admin\ProductInventoryController;
 use App\Http\Controllers\Api\Admin\ProfileController;
+use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\CartController;
@@ -26,6 +28,8 @@ use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\OfferController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\OfferTemplateController;
+use App\Http\Controllers\Api\SupportController;
+use App\Http\Controllers\Api\SupportChatController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -67,6 +71,36 @@ Route::prefix('admin')->group(function () {
         Route::post('/profile', [ProfileController::class, 'update']);
         Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar']);
         Route::post('/change-password', [ProfileController::class, 'changePassword']);
+
+        // Roles
+        Route::prefix('roles')->group(function () {
+            Route::get('/', [RoleController::class, 'index']);
+            Route::post('/', [RoleController::class, 'store']);
+            Route::get('/{id}', [RoleController::class, 'show']);
+            Route::put('/{id}', [RoleController::class, 'update']);
+            Route::delete('/{id}', [RoleController::class, 'destroy']);
+            Route::post('/{id}/assign-permissions', [RoleController::class, 'assignPermissions']);
+            Route::post('/{id}/revoke-permissions', [RoleController::class, 'revokePermissions']);
+            Route::post('/{id}/sync-permissions', [RoleController::class, 'syncPermissions']);
+        });
+
+        // Permissions
+        Route::prefix('permissions')->group(function () {
+            Route::get('/', [PermissionController::class, 'index']);
+            Route::get('/grouped', [PermissionController::class, 'grouped']);
+            Route::post('/', [PermissionController::class, 'store']);
+            Route::get('/{id}', [PermissionController::class, 'show']);
+            Route::put('/{id}', [PermissionController::class, 'update']);
+            Route::delete('/{id}', [PermissionController::class, 'destroy']);
+        });
+
+        // Assign / revoke roles for users
+        Route::prefix('user-roles')->group(function () {
+            Route::get('/{userId}', [RoleController::class, 'userRoles']);
+            Route::post('/assign', [RoleController::class, 'assignToUser']);
+            Route::post('/revoke', [RoleController::class, 'revokeFromUser']);
+            Route::post('/sync', [RoleController::class, 'syncUserRoles']);
+        });
 
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index']);
@@ -150,7 +184,7 @@ Route::prefix('admin')->group(function () {
             Route::get('/{customer_address}', [CustomerAddressController::class, 'show']);
             Route::put('/{customer_address}', [CustomerAddressController::class, 'update']);
             Route::delete('/{customer_address}', [CustomerAddressController::class, 'destroy']);
-            Route::patch('/{customer_address}/set-default', [CustomerAddressController::class, 'setDefault']);
+            Route::post('/{customer_address}/set-default', [CustomerAddressController::class, 'setDefault']);
         });
 
         // Payments
@@ -232,8 +266,23 @@ Route::prefix('admin')->group(function () {
             Route::get('/', [ErrorLogController::class, 'index']);
             Route::get('/{id}', [ErrorLogController::class, 'show']);
             Route::post('/', [ErrorLogController::class, 'store']);
-            Route::patch('/{id}/resolve', [ErrorLogController::class, 'markResolved']);
+            Route::post('/{id}/resolve', [ErrorLogController::class, 'markResolved']);
             Route::delete('/{id}', [ErrorLogController::class, 'destroy']);
+        });
+
+        // Support Tickets (Admin)
+        Route::prefix('supports')->group(function () {
+            Route::get('/', [SupportController::class, 'index']);
+            Route::get('/{id}', [SupportController::class, 'show']);
+            Route::post('/{id}/status', [SupportController::class, 'updateStatus']);
+        });
+
+        // Support Chat (Admin)
+        Route::prefix('support-chats')->group(function () {
+            Route::get('/{supportId}', [SupportChatController::class, 'indexAsAdmin']);
+            Route::post('/{supportId}', [SupportChatController::class, 'sendAsAdmin']);
+            Route::get('/{supportId}/unread-count', [SupportChatController::class, 'unreadCount']);
+            Route::post('/{supportId}/mark-all-read', [SupportChatController::class, 'markAllAsRead']);
         });
     });
 });
@@ -296,6 +345,21 @@ Route::middleware('customer.token')->group(function () {
         Route::get('/{id}', [PaymentController::class, 'show']);
         Route::delete('/{id}', [PaymentController::class, 'destroy']);
         Route::post('/{id}/refund', [PaymentController::class, 'refund']);
+    });
+
+    // Support Tickets (Customer)
+    Route::prefix('supports')->group(function () {
+        Route::get('/', [SupportController::class, 'customerIndex']);
+        Route::post('/', [SupportController::class, 'store']);
+        Route::get('/{id}', [SupportController::class, 'show']);
+        Route::post('/{id}/status', [SupportController::class, 'updateStatus']);
+    });
+
+    // Support Chat (Customer)
+    Route::prefix('support-chats')->group(function () {
+        Route::get('/{supportId}', [SupportChatController::class, 'indexAsCustomer']);
+        Route::post('/{supportId}', [SupportChatController::class, 'sendAsCustomer']);
+        Route::post('/{supportId}/mark-all-read', [SupportChatController::class, 'markAllAsRead']);
     });
 });
 
