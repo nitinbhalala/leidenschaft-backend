@@ -9,13 +9,20 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CustomerAddressController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\ErrorLogController;
+use App\Http\Controllers\Api\EssenceController;
 use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\HomePageController;
+use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\OfferController;
+use App\Http\Controllers\Api\OfferTemplateController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PolicyController;
@@ -23,15 +30,9 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\SocialAuthController;
-use App\Http\Controllers\Api\WishlistController;
-use App\Http\Controllers\Api\EmailTemplateController;
-use App\Http\Controllers\Api\OfferController;
-use App\Http\Controllers\Api\LocationController;
-use App\Http\Controllers\Api\OfferTemplateController;
-use App\Http\Controllers\Api\SupportController;
 use App\Http\Controllers\Api\SupportChatController;
-use App\Http\Controllers\Api\CheckoutController;
-use App\Http\Controllers\Api\HomePageController;
+use App\Http\Controllers\Api\SupportController;
+use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -224,6 +225,12 @@ Route::prefix('admin')->group(function () {
             Route::post('/toggle-status/{section}', [HomePageController::class, 'toggleStatus']);
         });
 
+        Route::prefix('essence')->group(function () {
+            Route::post('/settings', [EssenceController::class, 'index']);
+            Route::post('/update-settings', [EssenceController::class, 'update']);
+            Route::post('/toggle-status/{section}', [EssenceController::class, 'toggleStatus']);
+        });
+
         // Blogs
         Route::prefix('blogs')->group(function () {
             Route::get('/', [BlogController::class, 'index']);
@@ -408,6 +415,8 @@ Route::prefix('product-reviews')->group(function () {
 });
 
 Route::get('/home-page', [HomePageController::class, 'index']);
+
+Route::get('/essence', [EssenceController::class, 'index']);
 
 Route::get('/faqs', [FaqController::class, 'index']);
 

@@ -75,21 +75,20 @@ class PolicyController extends BaseController
             $admin = $request->attributes->get('admin');
 
             if (!$admin) {
-                return $this->error("Unauthorized. Only admin can update policy.", 403);
-            }
-
-            $policy = Policy::where('slug', $slug)->first();
-
-            if (!$policy) {
-                return $this->error("Policy not found", 404);
+                return $this->error("Unauthorized. Only admin can manage policy.", 403);
             }
 
             $data = $request->validated();
             $data['slug'] = $slug;
 
-            $policy->update($data);
+            $policy = Policy::updateOrCreate(
+                ['slug' => $slug],
+                $data
+            );
 
-            return $this->success($policy->fresh(), "Updated");
+            $message = $policy->wasRecentlyCreated ? "Created" : "Updated";
+
+            return $this->success($policy->fresh(), $message);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), 500);
         }
