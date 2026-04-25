@@ -35,6 +35,24 @@ class CartController extends BaseController
         }
     }
 
+    public function updateCart(\Illuminate\Http\Request $request, $id)
+    {
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        try {
+            $cart = Cart::findOrFail($id);
+            $cart->quantity = $request->quantity;
+            $cart->save();
+
+            return $this->success($cart, "Cart quantity updated");
+        } catch (\Exception $e) {
+
+            return $this->error($e->getMessage());
+        }
+    }
+
     public function destroy($id)
     {
         try {

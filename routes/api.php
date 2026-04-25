@@ -30,6 +30,8 @@ use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\OfferTemplateController;
 use App\Http\Controllers\Api\SupportController;
 use App\Http\Controllers\Api\SupportChatController;
+use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\HomePageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -215,6 +217,13 @@ Route::prefix('admin')->group(function () {
             Route::delete('/{key}', [SettingController::class, 'destroy']);
         });
 
+        // Home Page Settings
+        Route::prefix('home-page')->group(function () {
+            Route::post('/settings', [HomePageController::class, 'index']);
+            Route::post('/update-settings', [HomePageController::class, 'update']);
+            Route::post('/toggle-status/{section}', [HomePageController::class, 'toggleStatus']);
+        });
+
         // Blogs
         Route::prefix('blogs')->group(function () {
             Route::get('/', [BlogController::class, 'index']);
@@ -322,7 +331,12 @@ Route::middleware('customer.token')->group(function () {
 
     // Cart
     Route::post('/add-to-cart', [CartController::class, 'addToCart']);
+    Route::put('/cart/{id}', [CartController::class, 'updateCart']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
+
+    // Checkout
+    Route::post('/checkout', [CheckoutController::class, 'processCheckout']);
+    Route::post('/complete-checkout', [CheckoutController::class, 'completeCheckout']);
 
     // Wishlist
     Route::post('/add-to-wishlist', [WishlistController::class, 'addToWishlist']);
@@ -392,6 +406,8 @@ Route::prefix('product-reviews')->group(function () {
     Route::post('/', [ProductReviewController::class, 'store']);
     Route::delete('/{productReview}', [ProductReviewController::class, 'destroy']);
 });
+
+Route::get('/home-page', [HomePageController::class, 'index']);
 
 Route::get('/faqs', [FaqController::class, 'index']);
 

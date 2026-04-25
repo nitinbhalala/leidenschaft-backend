@@ -86,7 +86,7 @@ class AuthController extends BaseController
                 'id'     => $customer->id,
                 'name'   => $customer->name,
                 'email'  => $customer->email,
-                'avatar' => $customer->avatar ? Storage::disk('public')->url($customer->avatar) : null,
+                'avatar' => $customer->avatar,
                 'phone'  => $customer->phone,
             ],
             'token'                    => $token,
@@ -166,7 +166,7 @@ class AuthController extends BaseController
                 'name'   => $customer->name,
                 'email'  => $customer->email,
                 'phone'  => $customer->phone,
-                'avatar' => $customer->avatar ? Storage::disk('public')->url($customer->avatar) : null,
+                'avatar' => $customer->avatar,
             ], 'Profile updated successfully.');
         } catch (\Exception $e) {
             return $this->error('Error updating profile.', 500, $e->getMessage());

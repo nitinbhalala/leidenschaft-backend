@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Customer;
-use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
 
@@ -32,7 +34,7 @@ class SocialAuthController extends BaseController
         try {
             $socialUser = Socialite::driver($provider)->stateless()->user();
         } catch (Throwable $e) {
-            return redirect($frontendUrl . '/social-callback?error=' . urlencode($e->getMessage()));
+            return redirect($frontendUrl . '?error=' . urlencode($e->getMessage()));
         }
 
         $customer = Customer::where('provider_id', $socialUser->getId())
@@ -40,9 +42,10 @@ class SocialAuthController extends BaseController
             ->first();
 
         if ($customer) {
+            $avatarPath = $customer->getRawOriginal('avatar') ?? $this->saveAvatarFromUrl($socialUser->getAvatar());
             $customer->update([
                 'provider_id' => $socialUser->getId(),
-                'avatar'      => $customer->avatar ?? $socialUser->getAvatar(),
+                'avatar'      => $avatarPath,
                 'provider'    => $provider,
             ]);
         } else {
@@ -50,7 +53,7 @@ class SocialAuthController extends BaseController
                 'name'        => $socialUser->getName(),
                 'email'       => $socialUser->getEmail(),
                 'provider_id' => $socialUser->getId(),
-                'avatar'      => $socialUser->getAvatar(),
+                'avatar'      => $this->saveAvatarFromUrl($socialUser->getAvatar()),
                 'provider'    => $provider,
                 'password'    => null,
             ]);
@@ -71,13 +74,39 @@ class SocialAuthController extends BaseController
             'refresh_token_expires_at' => $refreshExpiresAt,
         ]);
 
-        return redirect(
-            $frontendUrl . '/social-callback'
-                . '?token=' . $token
-                . '&token_expires_at=' . Carbon::now()->addDays(7)->toDateTimeString()
-                . '&refresh_token=' . $refreshToken
-                . '&refresh_token_expires_at=' . $refreshExpiresAt->toDateTimeString()
-        );
+        $customer->refresh();
+
+        $payload = base64_encode(json_encode([
+            'id'                       => $customer->id,
+            'name'                     => $customer->name,
+            'email'                    => $customer->email,
+            'avatar'                   => $customer->avatar,
+            'provider'                 => $customer->provider,
+            'token'                    => $token,
+            'token_expires_at'         => Carbon::now()->addDays(7)->toDateTimeString(),
+            'refresh_token'            => $refreshToken,
+            'refresh_token_expires_at' => $refreshExpiresAt->toDateTimeString(),
+        ]));
+
+        return redirect($frontendUrl . '?data=' . $payload);
+    }
+
+    private function saveAvatarFromUrl(?string $url): ?string
+    {
+        if (!$url) return null;
+
+        try {
+            $response = Http::get($url);
+            if (!$response->successful()) return null;
+
+            $extension = 'jpg';
+            $path      = 'avatars/' . Str::uuid() . '.' . $extension;
+            Storage::disk('public')->put($path, $response->body());
+
+            return $path;
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     private function validateProvider(string $provider): void
