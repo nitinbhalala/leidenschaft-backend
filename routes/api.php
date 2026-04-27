@@ -435,8 +435,10 @@ Route::prefix('locations')->group(function () {
     Route::get('/cities/{state_id}', [LocationController::class, 'cities']);
 });
 
-Route::get('/blogs', [BlogController::class, 'index']);
-Route::get('/{blog}', [BlogController::class, 'show']);
+Route::prefix('blogs')->group(function () {
+    Route::get('/', [BlogController::class, 'index']);
+    Route::get('/{blog}', [BlogController::class, 'show']);
+});
 
 Route::get('/policies/{policy}', [PolicyController::class, 'show']);
 

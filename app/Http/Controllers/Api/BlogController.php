@@ -27,7 +27,7 @@ class BlogController extends BaseController
             }
 
             if (!$admin) {
-                $query->where('status', 1);
+                $query->where('status', 'published');
             } elseif ($request->status && $request->status !== 'all') {
                 $query->where('status', $request->status);
             }
@@ -65,18 +65,18 @@ class BlogController extends BaseController
         }
     }
 
-    public function show($id)
+    public function show(Blog $blog)
     {
         try {
-            $blog = Blog::find($id);
+            $admin = request()->attributes->get('admin');
 
-            if (!$blog) {
+            if (!$admin && $blog->status !== 'published') {
                 return $this->error("Blog not found", 404);
             }
 
             $admin = request()->attributes->get('admin');
 
-            if (!$admin && isset($blog->status) && !$blog->status) {
+            if (!$admin && $blog->status !== 'published') {
                 return $this->error("Blog not found", 404);
             }
 
