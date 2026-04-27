@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\ErrorLogController;
 use App\Http\Controllers\Api\EssenceController;
+use App\Http\Controllers\Api\InteriorController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\HomePageController;
 use App\Http\Controllers\Api\LocationController;
@@ -231,6 +232,12 @@ Route::prefix('admin')->group(function () {
             Route::post('/toggle-status/{section}', [EssenceController::class, 'toggleStatus']);
         });
 
+        Route::prefix('interior')->group(function () {
+            Route::post('/settings', [InteriorController::class, 'index']);
+            Route::post('/update-settings', [InteriorController::class, 'update']);
+            Route::post('/toggle-status/{section}', [InteriorController::class, 'toggleStatus']);
+        });
+
         // Blogs
         Route::prefix('blogs')->group(function () {
             Route::get('/', [BlogController::class, 'index']);
@@ -417,6 +424,8 @@ Route::prefix('product-reviews')->group(function () {
 Route::get('/home-page', [HomePageController::class, 'index']);
 
 Route::get('/essence', [EssenceController::class, 'index']);
+
+Route::get('/interior', [InteriorController::class, 'index']);
 
 Route::get('/faqs', [FaqController::class, 'index']);
 
