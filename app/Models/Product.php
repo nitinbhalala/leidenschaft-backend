@@ -39,7 +39,6 @@ class Product extends Model
                 $product->slug = self::generateUniqueSlug($product->name, $product->id);
             }
         });
-
     }
 
     public static function generateUniqueSlug($name, $ignoreId = null)

@@ -113,10 +113,43 @@ class ProductController extends BaseController
         }
     }
 
-    public function show(Product $product)
+    public function customerShow(Product $product)
     {
         try {
             $admin = request()->attributes->get('admin');
+
+            if (!$admin && $product->status != 1) {
+                return $this->error('Product not found', 404);
+            }
+
+            $product->load(['category', 'subCategory', 'images', 'reviews.customer:id,name']);
+
+            $reviews = $product->reviews->map(function ($review) {
+                $data = $review->toArray();
+                $data['customer_name'] = $review->customer?->name;
+                unset($data['customer']);
+                return $data;
+            });
+
+            $data                  = $product->toArray();
+            $data['reviews']       = $reviews;
+            $data['total_reviews'] = $product->reviews->count();
+            $data['avg_rating']    = $data['total_reviews'] > 0
+                ? round($product->reviews->avg('rating'), 1)
+                : 0;
+
+            return $this->success($data, 'Product fetched successfully');
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $admin = request()->attributes->get('admin');
+
+            $product = Product::find($id);
 
             if (!$admin && $product->status != 1) {
                 return $this->error('Product not found', 404);
