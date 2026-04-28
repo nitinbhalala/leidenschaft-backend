@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Models\Product;
 use App\Models\ProductInventory;
 use Illuminate\Http\Request;
 
@@ -63,13 +64,11 @@ class ProductInventoryController extends BaseController
 
         $inventory = ProductInventory::where('product_id', $request->product_id)->firstOrFail();
 
-        $inventory->stock = $request->quantity;
-
-        if ($inventory->stock < 0) {
-            $inventory->stock = 0;
-        }
-
+        $inventory->stock = max(0, (int) $request->quantity);
         $inventory->updateStockStatus();
+
+        Product::where('id', $inventory->product_id)
+            ->update(['stock' => $inventory->stock]);
 
         $inventory->load(['product.images', 'product.category', 'product.subCategory']);
 

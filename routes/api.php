@@ -167,9 +167,9 @@ Route::prefix('admin')->group(function () {
         Route::prefix('orders')->group(function () {
             Route::get('/', [OrderController::class, 'index']);
             Route::post('/', [OrderController::class, 'store']);
-            Route::get('/{order}', [OrderController::class, 'show']);
-            Route::put('/{order}', [OrderController::class, 'update']);
-            Route::delete('/{order}', [OrderController::class, 'destroy']);
+            Route::get('/{id}', [OrderController::class, 'show']);
+            Route::put('/{id}', [OrderController::class, 'update']);
+            Route::delete('/{id}', [OrderController::class, 'destroy']);
         });
 
         // Customers
@@ -344,13 +344,13 @@ Route::middleware('customer.token')->group(function () {
     });
 
     // Cart
+    Route::get('/cart/{customer_id}', [CartController::class, 'getCart']);
     Route::post('/add-to-cart', [CartController::class, 'addToCart']);
     Route::put('/cart/{id}', [CartController::class, 'updateCart']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 
     // Checkout
     Route::post('/checkout', [CheckoutController::class, 'processCheckout']);
-    Route::post('/complete-checkout', [CheckoutController::class, 'completeCheckout']);
 
     // Wishlist
     Route::post('/add-to-wishlist', [WishlistController::class, 'addToWishlist']);
@@ -358,18 +358,14 @@ Route::middleware('customer.token')->group(function () {
 
     // Orders
     Route::prefix('orders')->group(function () {
-        Route::get('/', [OrderController::class, 'index']);
-        Route::post('/', [OrderController::class, 'store']);
-        Route::get('/{order}', [OrderController::class, 'show']);
-        Route::put('/{order}', [OrderController::class, 'update']);
-        Route::delete('/{order}', [OrderController::class, 'destroy']);
+        Route::get('/', [OrderController::class, 'customerOrders']);
+        Route::get('/{id}', [OrderController::class, 'customerShow']);
+        Route::post('/{id}/cancel', [OrderController::class, 'cancel']);
     });
 
     // Payments
     Route::prefix('payments')->group(function () {
         Route::get('/', [PaymentController::class, 'index']);
-        Route::post('/create-order', [PaymentController::class, 'createOrder']);
-        Route::post('/verify', [PaymentController::class, 'verify']);
         Route::get('/{id}', [PaymentController::class, 'show']);
         Route::delete('/{id}', [PaymentController::class, 'destroy']);
         Route::post('/{id}/refund', [PaymentController::class, 'refund']);
@@ -392,6 +388,9 @@ Route::middleware('customer.token')->group(function () {
 });
 
 Route::post('/contact/store', [ContactController::class, 'store']);
+
+// Razorpay callback — no auth middleware (browser redirect from Razorpay after payment)
+Route::get('/payment/callback', [PaymentController::class, 'callback']);
 
 Route::prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index']);
@@ -437,10 +436,12 @@ Route::prefix('locations')->group(function () {
 
 Route::prefix('blogs')->group(function () {
     Route::get('/', [BlogController::class, 'index']);
-    Route::get('/{blog}', [BlogController::class, 'show']);
+    Route::get('/{blog:slug}', [BlogController::class, 'show']);
 });
 
 Route::get('/policies/{policy}', [PolicyController::class, 'show']);
 
-Route::get('/setting/footer', [SettingController::class, 'getFooterSettings']);
-Route::get('/setting/{key}', [SettingController::class, 'getByKey']);
+Route::prefix('setting')->group(function () {
+    Route::get('/footer', [SettingController::class, 'getFooterSettings']);
+    Route::get('/{key}', [SettingController::class, 'getByKey']);
+});

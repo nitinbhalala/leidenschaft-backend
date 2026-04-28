@@ -260,7 +260,7 @@ class ProductController extends BaseController
         }
     }
 
-    public function search(Request $request)
+    /* public function search(Request $request)
     {
         try {
             $query = Product::with(['category', 'subCategory', 'images'])
@@ -321,7 +321,7 @@ class ProductController extends BaseController
         } catch (Exception $e) {
             return $this->error($e->getMessage(), 500);
         }
-    }
+    } */
 
     public function toggleActive($id)
     {
@@ -350,6 +350,90 @@ class ProductController extends BaseController
 
                 return $this->success($product, 'Product status updated successfully');
             });
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function search(Request $request)
+    {
+        try {
+            $query = Product::with(['category', 'subCategory', 'images', 'inventory'])
+                ->where('status', 1);
+
+            // Keyword search
+            if ($request->filled('q')) {
+                $q = $request->q;
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('name', 'like', "%{$q}%")
+                        ->orWhere('sku', 'like', "%{$q}%")
+                        ->orWhere('description', 'like', "%{$q}%")
+                        ->orWhereHas('category', function ($cq) use ($q) {
+                            $cq->where('name', 'like', "%{$q}%");
+                        });
+                });
+            }
+
+            // Category filter
+            if ($request->filled('category')) {
+                $query->whereHas('category', function ($cq) use ($request) {
+                    $cq->where('slug', $request->category)
+                        ->orWhere('id', $request->category);
+                });
+            }
+
+            // Sub-category filter
+            if ($request->filled('sub_category')) {
+                $query->whereHas('subCategory', function ($cq) use ($request) {
+                    $cq->where('slug', $request->sub_category)
+                        ->orWhere('id', $request->sub_category);
+                });
+            }
+
+            // Price range filter
+            if ($request->filled('min_price')) {
+                $query->where('price', '>=', $request->min_price);
+            }
+
+            if ($request->filled('max_price')) {
+                $query->where('price', '<=', $request->max_price);
+            }
+
+            // ✅ Availability filter via product_inventories table
+            $availability = $request->availability;
+            if ($availability === 'in_stock') {
+                $query->whereHas('inventory', function ($iq) {
+                    $iq->where('is_active', 1)
+                        ->where('status', 'in_stock');
+                });
+            } elseif ($availability === 'out_of_stock') {
+                $query->whereHas('inventory', function ($iq) {
+                    $iq->where('status', 'out_of_stock');
+                });
+            }
+            // 'all' or missing = no filter
+
+            // Sort options
+            $sortBy = $request->sort_by ?? 'featured';
+
+            match ($sortBy) {
+                'name_asc'     => $query->orderBy('name', 'asc'),
+                'name_desc'    => $query->orderBy('name', 'desc'),
+                'price_asc'    => $query->orderBy('price', 'asc'),
+                'price_desc'   => $query->orderBy('price', 'desc'),
+                'date_asc'     => $query->orderBy('created_at', 'asc'),
+                'date_desc'    => $query->orderBy('created_at', 'desc'),
+                'best_selling' => $query->withCount('orders')->orderBy('orders_count', 'desc'),
+                'relevant'     => $request->filled('q')
+                    ? $query->orderByRaw("CASE WHEN name LIKE ? THEN 0 ELSE 1 END, created_at DESC", ["{$request->q}%"])
+                    : $query->orderBy('created_at', 'desc'),
+                default        => $query->orderBy('created_at', 'desc'),
+            };
+
+            $perPage  = $request->per_page ?? 12;
+            $products = $query->paginate($perPage);
+
+            return $this->success($products, 'Products fetched successfully');
         } catch (Exception $e) {
             return $this->error($e->getMessage(), 500);
         }

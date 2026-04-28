@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Pagination\LengthAwarePaginator;
+// use Illuminate\Pagination\LengthAwarePaginator;
 
 class BaseController extends Controller
 {
     protected function success($data = null, $message = "Success", $status = 200)
     {
-        if ($data instanceof LengthAwarePaginator) {
+        /* if ($data instanceof LengthAwarePaginator) {
             $data = [
                 'current_page' => $data->currentPage(),
                 'per_page'     => $data->perPage(),
                 'total'        => $data->total(),
                 'data'         => $data->items(),
             ];
-        }
+        } */
 
         return response()->json([
             'success' => true,

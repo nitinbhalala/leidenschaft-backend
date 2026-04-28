@@ -12,14 +12,22 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'customer_id',
+        'product_ids',
         'customer_name',
         'customer_email',
+        'email_news_offers',
         'customer_phone',
         'shipping_address',
         'city',
         'state',
         'country',
         'postal_code',
+        'billing_same_as_shipping',
+        'billing_address',
+        'billing_city',
+        'billing_state',
+        'billing_country',
+        'billing_postal_code',
         'items_count',
         'subtotal',
         'tax',
@@ -33,6 +41,9 @@ class Order extends Model
     ];
 
     protected $casts = [
+        'product_ids' => 'array',
+        'email_news_offers' => 'integer',
+        'billing_same_as_shipping' => 'integer',
         'subtotal'   => 'decimal:2',
         'tax'        => 'decimal:2',
         'shipping'   => 'decimal:2',
@@ -43,6 +54,16 @@ class Order extends Model
 
     public function customer()
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
     }
 }

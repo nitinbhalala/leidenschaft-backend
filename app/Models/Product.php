@@ -39,6 +39,7 @@ class Product extends Model
                 $product->slug = self::generateUniqueSlug($product->name, $product->id);
             }
         });
+
     }
 
     public static function generateUniqueSlug($name, $ignoreId = null)
@@ -76,5 +77,10 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(ProductReview::class);
+    }
+
+    public function inventory()
+    {
+        return $this->hasOne(ProductInventory::class, 'product_id');
     }
 }

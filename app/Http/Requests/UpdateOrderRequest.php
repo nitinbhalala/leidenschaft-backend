@@ -36,7 +36,7 @@ class UpdateOrderRequest extends FormRequest
             'shipping' => 'nullable|numeric|min:0',
             'total' => 'sometimes|numeric|min:0',
             'payment_method' => 'nullable|string|max:100',
-            'status' => 'nullable|in:pending,processing,shipped,delivered,cancelled'
+            'status' => 'nullable|in:pending,processing,shipped,delivered,cancelled,failed'
         ];
     }
 
@@ -70,7 +70,7 @@ class UpdateOrderRequest extends FormRequest
             'total.min' => 'Total must be at least 0.',
             'payment_method.string' => 'Payment method must be a string.',
             'payment_method.max' => 'Payment method may not be greater than 100 characters.',
-            'status.in' => 'Status must be pending, processing, shipped, delivered, or cancelled.',
+            'status.in' => 'Status must be pending, processing, shipped, delivered, cancelled, or failed.',
         ];
     }
 }

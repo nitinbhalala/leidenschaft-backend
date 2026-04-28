@@ -17,10 +17,18 @@ class Payment extends Model
         'amount',
         'currency',
         'status',
-        'meta'
+        'refund_id',
+        'refund_amount',
+        'refunded_at',
+        'meta',
     ];
 
     protected $casts = [
         'meta' => 'array'
     ];
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 }
