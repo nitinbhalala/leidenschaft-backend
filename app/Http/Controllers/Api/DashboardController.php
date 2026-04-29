@@ -125,7 +125,7 @@ class DashboardController extends BaseController
         ])
             ->latest()
             ->take(5)
-            ->get(['id', 'order_number', 'customer_id', 'total', 'status', 'created_at']);
+            ->get(['id', 'order_number',  'customer_id', 'customer_name', 'total', 'status', 'created_at']);
 
         // 8. Low Stock Alert
         $lowStock = Product::join('product_inventories', 'product_inventories.product_id', '=', 'products.id')

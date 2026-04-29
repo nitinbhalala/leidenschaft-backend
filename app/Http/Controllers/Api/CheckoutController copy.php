@@ -39,21 +39,18 @@ class CheckoutController extends BaseController
     {
         try {
             return DB::transaction(function () use ($request) {
-                $customerId      = $request->customer_id; // nullable for guest
+                $customerId      = $request->customer_id;
                 $requestProducts = collect($request->products);
                 $productIds      = $requestProducts->pluck('product_id')->toArray();
 
-                // Cart validation only applies for logged-in customers
-                if ($customerId) {
-                    $cartProductIds = Cart::where('customer_id', $customerId)
-                        ->whereIn('product_id', $productIds)
-                        ->pluck('product_id')
-                        ->toArray();
+                $cartProductIds = Cart::where('customer_id', $customerId)
+                    ->whereIn('product_id', $productIds)
+                    ->pluck('product_id')
+                    ->toArray();
 
-                    $missingIds = array_diff($productIds, $cartProductIds);
-                    if (!empty($missingIds)) {
-                        return $this->error("Products not found in cart: " . implode(', ', $missingIds), 400);
-                    }
+                $missingIds = array_diff($productIds, $cartProductIds);
+                if (!empty($missingIds)) {
+                    return $this->error("Products not found in cart: " . implode(', ', $missingIds), 400);
                 }
 
                 $addressData = $this->handleShippingAddress($request);
@@ -151,8 +148,7 @@ class CheckoutController extends BaseController
 
     private function handleShippingAddress(CheckoutRequest $request): array
     {
-        // Use saved address only if customer is logged in and address_id is provided
-        if ($request->customer_id && $request->address_id) {
+        if ($request->address_id) {
             $address = CustomerAddress::with(['city', 'state', 'country'])->find($request->address_id);
             return [
                 'name'          => $address->name,
@@ -166,46 +162,40 @@ class CheckoutController extends BaseController
             ];
         }
 
-        // Use shipping_address object from request
-        $shipping = $request->shipping_address;
-
-        // Save address only if customer is logged in and save_address is true
-        if ($request->customer_id && !empty($shipping['save_address'])) {
+        if ($request->save_address) {
             CustomerAddress::create([
                 'customer_id'   => $request->customer_id,
-                'name'          => $shipping['name'],
-                'phone'         => $shipping['phone'],
-                'address_line1' => $shipping['address_line1'],
-                'address_line2' => $shipping['address_line2'] ?? null,
-                'city_id'       => $shipping['city_id'],
-                'state_id'      => $shipping['state_id'],
-                'country_id'    => $shipping['country_id'],
-                'pincode'       => $shipping['pincode'],
+                'name'          => $request->name,
+                'phone'         => $request->phone,
+                'address_line1' => $request->address_line1,
+                'address_line2' => $request->address_line2,
+                'city_id'       => $request->city_id,
+                'state_id'      => $request->state_id,
+                'country_id'    => $request->country_id,
+                'pincode'       => $request->pincode,
                 'is_default'    => !CustomerAddress::where('customer_id', $request->customer_id)->exists(),
             ]);
         }
 
-        $city    = City::find($shipping['city_id']);
-        $state   = State::find($shipping['state_id']);
-        $country = Country::find($shipping['country_id']);
+        $city    = City::find($request->city_id);
+        $state   = State::find($request->state_id);
+        $country = Country::find($request->country_id);
 
         return [
-            'name'          => $shipping['name'],
-            'phone'         => $shipping['phone'],
-            'address_line1' => $shipping['address_line1'],
-            'address_line2' => $shipping['address_line2'] ?? null,
+            'name'          => $request->name,
+            'phone'         => $request->phone,
+            'address_line1' => $request->address_line1,
+            'address_line2' => $request->address_line2,
             'city_name'     => $city->name,
             'state_name'    => $state->name,
             'country_name'  => $country->name,
-            'pincode'       => $shipping['pincode'],
+            'pincode'       => $request->pincode,
         ];
     }
 
     private function handleBillingAddress(CheckoutRequest $request, array $shippingData): array
     {
-        // Default: billing same as shipping (when billing_same_as_shipping is 1 or null/not sent)
-        $sameAsShipping = $request->input('billing_same_as_shipping', 1);
-        $sameAsShipping = (int) $sameAsShipping === 1;
+        $sameAsShipping = $request->boolean('billing_same_as_shipping', true);
 
         if ($sameAsShipping) {
             return [
@@ -218,16 +208,13 @@ class CheckoutController extends BaseController
             ];
         }
 
-        // billing_same_as_shipping = 0 → use billing_address object from request
-        $billing = $request->billing_address;
-
         return [
             'billing_same_as_shipping' => false,
-            'billing_address'          => $billing['address_line1'] . (!empty($billing['address_line2']) ? ', ' . $billing['address_line2'] : ''),
-            'billing_city'             => $billing['city'],
-            'billing_state'            => $billing['state'],
-            'billing_country'          => $billing['country'],
-            'billing_postal_code'      => $billing['pincode'],
+            'billing_address'          => $request->billing_address_line1 . ($request->billing_address_line2 ? ', ' . $request->billing_address_line2 : ''),
+            'billing_city'             => $request->billing_city,
+            'billing_state'            => $request->billing_state,
+            'billing_country'          => $request->billing_country,
+            'billing_postal_code'      => $request->billing_pincode,
         ];
     }
 

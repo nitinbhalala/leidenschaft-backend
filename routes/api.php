@@ -349,9 +349,6 @@ Route::middleware('customer.token')->group(function () {
     Route::put('/cart/{id}', [CartController::class, 'updateCart']);
     Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 
-    // Checkout
-    Route::post('/checkout', [CheckoutController::class, 'processCheckout']);
-
     // Wishlist
     Route::post('/add-to-wishlist', [WishlistController::class, 'addToWishlist']);
     Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
@@ -386,6 +383,9 @@ Route::middleware('customer.token')->group(function () {
         Route::post('/{supportId}/mark-all-read', [SupportChatController::class, 'markAllAsRead']);
     });
 });
+
+// Checkout
+Route::post('/checkout', [CheckoutController::class, 'processCheckout']);
 
 Route::post('/contact/store', [ContactController::class, 'store']);
 
