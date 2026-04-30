@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Customer;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -13,9 +14,26 @@ use Throwable;
 
 class SocialAuthController extends BaseController
 {
+    private function setSocialConfigFromDB(string $provider): void
+    {
+        $settings = Setting::whereIn('key', [
+            "{$provider}_client_id",
+            "{$provider}_client_secret",
+            "{$provider}_redirect_uri",
+        ])->pluck('value', 'key');
+
+        if ($settings->isEmpty()) return;
+
+        config([
+            "services.$provider.client_id"     => $settings["{$provider}_client_id"] ?? null,
+            "services.$provider.client_secret" => $settings["{$provider}_client_secret"] ?? null,
+            "services.$provider.redirect"      => $settings["{$provider}_redirect_uri"] ?? null,
+        ]);
+    }
+
     public function redirect(string $provider, \Illuminate\Http\Request $request)
     {
-        $this->validateProvider($provider);
+        $this->setSocialConfigFromDB($provider);
 
         $frontendUrl = rtrim($request->header('Origin', $request->header('Referer', '')), '/');
 
@@ -27,7 +45,7 @@ class SocialAuthController extends BaseController
 
     public function callback(string $provider, \Illuminate\Http\Request $request)
     {
-        $this->validateProvider($provider);
+        $this->setSocialConfigFromDB($provider);
 
         $frontendUrl = rtrim($request->input('state', ''), '/');
 
