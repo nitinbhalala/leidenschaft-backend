@@ -98,7 +98,7 @@ class SocialAuthController extends BaseController
             'id'                       => $customer->id,
             'name'                     => $customer->name,
             'email'                    => $customer->email,
-            'avatar'                   => $customer->avatar,
+            'phone'                    => $customer->phone,
             'provider'                 => $customer->provider,
             'token'                    => $token,
             'token_expires_at'         => Carbon::now()->addDays(7)->toDateTimeString(),
