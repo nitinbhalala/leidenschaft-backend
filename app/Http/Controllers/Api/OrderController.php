@@ -54,6 +54,79 @@ class OrderController extends BaseController
         return $this->success($order, "Order fetched successfully");
     }
 
+    public function invoice(Request $request, $id)
+    {
+        $customer = $request->attributes->get('customer');
+
+        $order = Order::with([
+            'items.product:id,name,slug,price',
+            'items.product.images',
+            'payment',
+        ])
+            ->where('id', $id)
+            ->where('customer_id', $customer->id)
+            ->first();
+
+        if (!$order) {
+            return $this->error("Order not found", 404);
+        }
+
+        $addressParts = array_filter([
+            $order->shipping_address,
+            $order->city,
+            $order->state . ($order->postal_code ? ' - ' . $order->postal_code : ''),
+            $order->country,
+        ]);
+
+        $paymentMethod = 'Razorpay';
+        if ($order->payment && $order->payment->method) {
+            $methodMap = [
+                'card'       => 'Razorpay (Credit Card)',
+                'upi'        => 'Razorpay (UPI)',
+                'netbanking' => 'Razorpay (Net Banking)',
+                'wallet'     => 'Razorpay (Wallet)',
+                'emi'        => 'Razorpay (EMI)',
+            ];
+            $paymentMethod = $methodMap[$order->payment->method]
+                ?? 'Razorpay (' . ucfirst($order->payment->method) . ')';
+        }
+
+        $items = $order->items->map(function ($item) {
+            $image = $item->product && $item->product->images->isNotEmpty()
+                ? $item->product->images->first()->image
+                : null;
+
+            return [
+                'id'       => $item->product_id,
+                'name'     => $item->product ? $item->product->name : 'Product',
+                'image'    => $image,
+                'price'    => (string) $item->price,
+                'quantity' => $item->quantity,
+                'total'    => (string) $item->total,
+            ];
+        });
+
+        $invoice = [
+            'orderNumber'   => $order->order_number,
+            'date'          => ($order->placed_at ?? $order->created_at)->format('M d, Y'),
+            'paymentMethod' => $paymentMethod,
+            'status'        => $order->status,
+            'customer'      => [
+                'name'    => $order->customer_name,
+                'email'   => $order->customer_email,
+                'phone'   => $order->customer_phone,
+                'address' => implode(', ', $addressParts),
+            ],
+            'items'    => $items,
+            'subtotal' => (string) $order->subtotal,
+            'tax'      => (string) $order->tax,
+            'shipping' => (string) $order->shipping,
+            'total'    => (string) $order->total,
+        ];
+
+        return $this->success($invoice, "Invoice fetched successfully");
+    }
+
     public function cancel(Request $request, $id)
     {
         $customer = $request->attributes->get('customer');

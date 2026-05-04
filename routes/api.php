@@ -357,6 +357,7 @@ Route::middleware('customer.token')->group(function () {
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'customerOrders']);
         Route::get('/{id}', [OrderController::class, 'customerShow']);
+        Route::get('/{id}/invoice', [OrderController::class, 'invoice']);
         Route::post('/{id}/cancel', [OrderController::class, 'cancel']);
     });
 

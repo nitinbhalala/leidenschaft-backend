@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\RefundRequest;
+use App\Mail\OrderInvoiceMail;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Razorpay\Api\Api;
 
 class PaymentController extends BaseController
@@ -83,6 +85,24 @@ class PaymentController extends BaseController
         });
 
         $payment = Payment::where('razorpay_order_id', $paymentLinkId)->first();
+
+        // Send invoice email after successful payment
+        if ($payment && $payment->order_id) {
+            try {
+                $order = Order::with([
+                    'items.product:id,name,sku,slug,price',
+                    'items.product.images',
+                    'payment',
+                ])->find($payment->order_id);
+
+                if ($order && $order->customer_email) {
+                    Mail::to($order->customer_email)
+                        ->send(new OrderInvoiceMail($order));
+                }
+            } catch (\Exception $e) {
+                // Invoice email failure should not block redirect
+            }
+        }
 
         return redirect($frontendUrl . '/payment/success?order_id=' . ($payment?->order_id ?? ''));
     }
