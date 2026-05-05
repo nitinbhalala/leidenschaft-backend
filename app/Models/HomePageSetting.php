@@ -65,6 +65,11 @@ class HomePageSetting extends Model
         'section_8_img_1',
         'section_8_img_2',
         'section_8_status',
+
+        // Section 9 - New Section
+        'section_9_title',
+        'section_9_subtitle',
+        'section_9_status',
     ];
 
     protected $casts = [
@@ -76,6 +81,7 @@ class HomePageSetting extends Model
         'section_6_status' => 'integer',
         'section_7_status' => 'integer',
         'section_8_status' => 'integer',
+        'section_9_status' => 'integer',
     ];
 
     protected array $imageFields = [

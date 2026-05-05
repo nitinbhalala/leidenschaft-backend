@@ -294,69 +294,6 @@ class ProductController extends BaseController
         }
     }
 
-    /* public function search(Request $request)
-    {
-        try {
-            $query = Product::with(['category', 'subCategory', 'images'])
-                ->where('status', 1);
-
-            // Keyword search
-            if ($request->filled('q')) {
-                $q = $request->q;
-                $query->where(function ($sub) use ($q) {
-                    $sub->where('name', 'like', "%{$q}%")
-                        ->orWhere('sku', 'like', "%{$q}%")
-                        ->orWhere('description', 'like', "%{$q}%")
-                        ->orWhereHas('category', function ($cq) use ($q) {
-                            $cq->where('name', 'like', "%{$q}%");
-                        });
-                });
-            }
-
-            // Filter by category slug or id
-            if ($request->filled('category')) {
-                $query->whereHas('category', function ($cq) use ($request) {
-                    $cq->where('slug', $request->category)
-                        ->orWhere('id', $request->category);
-                });
-            }
-
-            // Filter by sub-category slug or id
-            if ($request->filled('sub_category')) {
-                $query->whereHas('subCategory', function ($cq) use ($request) {
-                    $cq->where('slug', $request->sub_category)
-                        ->orWhere('id', $request->sub_category);
-                });
-            }
-
-            // Price range filter
-            if ($request->filled('min_price')) {
-                $query->where('price', '>=', $request->min_price);
-            }
-
-            if ($request->filled('max_price')) {
-                $query->where('price', '<=', $request->max_price);
-            }
-
-            // In-stock filter
-            if ($request->boolean('in_stock')) {
-                $query->where('stock', '>', 0);
-            }
-
-            // Sort
-            $sortBy    = in_array($request->sort_by, ['name', 'price', 'created_at']) ? $request->sort_by : 'created_at';
-            $sortOrder = $request->sort_order === 'asc' ? 'asc' : 'desc';
-            $query->orderBy($sortBy, $sortOrder);
-
-            $perPage  = $request->per_page ?? 12;
-            $products = $query->paginate($perPage);
-
-            return $this->success($products, 'Products fetched successfully');
-        } catch (Exception $e) {
-            return $this->error($e->getMessage(), 500);
-        }
-    } */
-
     public function bestSelling(Request $request)
     {
         try {
@@ -421,7 +358,6 @@ class ProductController extends BaseController
             $query = Product::with(['category', 'subCategory', 'images', 'inventory'])
                 ->where('status', 1);
 
-            // Keyword search
             if ($request->filled('q')) {
                 $q = $request->q;
                 $query->where(function ($sub) use ($q) {
@@ -434,7 +370,6 @@ class ProductController extends BaseController
                 });
             }
 
-            // Category filter
             if ($request->filled('category')) {
                 $query->whereHas('category', function ($cq) use ($request) {
                     $cq->where('slug', $request->category)
@@ -442,7 +377,6 @@ class ProductController extends BaseController
                 });
             }
 
-            // Sub-category filter
             if ($request->filled('sub_category')) {
                 $query->whereHas('subCategory', function ($cq) use ($request) {
                     $cq->where('slug', $request->sub_category)
@@ -450,7 +384,6 @@ class ProductController extends BaseController
                 });
             }
 
-            // Price range filter
             if ($request->filled('min_price')) {
                 $query->where('price', '>=', $request->min_price);
             }
@@ -459,7 +392,6 @@ class ProductController extends BaseController
                 $query->where('price', '<=', $request->max_price);
             }
 
-            // ✅ Availability filter via product_inventories table
             $availability = $request->availability;
             if ($availability === 'in_stock') {
                 $query->whereHas('inventory', function ($iq) {
@@ -471,9 +403,7 @@ class ProductController extends BaseController
                     $iq->where('status', 'out_of_stock');
                 });
             }
-            // 'all' or missing = no filter
 
-            // Sort options
             $sortBy = $request->sort_by ?? 'featured';
 
             match ($sortBy) {

@@ -18,7 +18,6 @@ class DashboardController extends BaseController
         $startOfLastMonth = $startOfCurrentMonth->copy()->subMonth();
         $endOfLastMonth = $startOfLastMonth->copy()->endOfMonth();
 
-        // 1. Summary Statistics with MoM Growth
         $totalSales = Order::where('status', '!=', 'failed')->sum('total');
         $currentMonthSales = Order::where('status', '!=', 'failed')
             ->whereBetween('created_at', [$startOfCurrentMonth, $endOfCurrentMonth])
@@ -43,7 +42,6 @@ class DashboardController extends BaseController
         $lastMonthProducts = Product::whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->count();
         $productsGrowth = $this->calculateGrowth($currentMonthProducts, $lastMonthProducts);
 
-        // 2. Sales Overview (7 Months)
         $sevenMonthsAgo = $now->copy()->subMonths(6)->startOfMonth();
         $salesOverviewData = Order::selectRaw("
                 DATE_FORMAT(created_at, '%Y-%m') as month_year,
@@ -61,7 +59,6 @@ class DashboardController extends BaseController
         $totalOrders7 = $salesOverviewData->sum('orders');
         $avgMonthly = $salesOverviewData->count() > 0 ? $totalRevenue7 / $salesOverviewData->count() : 0;
 
-        // 3. Weekly Activity
         $startOfWeek = $now->copy()->startOfWeek();
         $weeklyRevenue = Order::where('status', '!=', 'failed')
             ->where('created_at', '>=', $startOfWeek)
@@ -86,7 +83,6 @@ class DashboardController extends BaseController
             ];
         });
 
-        // 4. Sales by Category
         $categorySales = Category::select('categories.name', DB::raw('SUM(order_items.total) as revenue'))
             ->join('products', 'products.category_id', '=', 'categories.id')
             ->join('order_items', 'order_items.product_id', '=', 'products.id')
@@ -96,7 +92,6 @@ class DashboardController extends BaseController
             ->orderByDesc('revenue')
             ->get();
 
-        // 5. Traffic Sources (Derive from Customer Provider or random for demo)
         $trafficSources = Customer::selectRaw("
                 IFNULL(provider, 'Direct') as source,
                 COUNT(*) as count
@@ -110,7 +105,6 @@ class DashboardController extends BaseController
                 ];
             });
 
-        // 6. Top Products
         $topProducts = Product::select('products.id', 'products.name', DB::raw('SUM(order_items.quantity) as sold'), DB::raw('SUM(order_items.total) as revenue'))
             ->join('order_items', 'order_items.product_id', '=', 'products.id')
             ->groupBy('products.id', 'products.name')
@@ -118,7 +112,6 @@ class DashboardController extends BaseController
             ->limit(4)
             ->get();
 
-        // 7. Recent Orders
         $recentOrders = Order::with([
             'customer:id,name',
             'items.product:id,name'
@@ -127,7 +120,6 @@ class DashboardController extends BaseController
             ->take(5)
             ->get(['id', 'order_number',  'customer_id', 'customer_name', 'total', 'status', 'created_at']);
 
-        // 8. Low Stock Alert
         $lowStock = Product::join('product_inventories', 'product_inventories.product_id', '=', 'products.id')
             ->whereRaw('product_inventories.stock <= product_inventories.low_stock_threshold')
             ->select('products.name', 'product_inventories.stock', 'product_inventories.low_stock_threshold as threshold')

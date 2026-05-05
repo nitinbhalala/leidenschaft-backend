@@ -110,6 +110,15 @@ class HomePageRequest extends FormRequest
             'section_8_img_1' => 'nullable|image|mimes:jpg,jpeg,png,webp',
             'section_8_img_2' => 'nullable|image|mimes:jpg,jpeg,png,webp',
             'section_8_status' => 'nullable|boolean',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Section 9 - New Section
+            |--------------------------------------------------------------------------
+            */
+            'section_9_title' => 'nullable|string|max:255',
+            'section_9_subtitle' => 'nullable|string|max:255',
+            'section_9_status' => 'nullable|boolean',
         ];
     }
 }

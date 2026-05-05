@@ -11,8 +11,12 @@ class OrderStatus
     const CANCELLED  = 'cancelled';
     const FAILED     = 'failed';
 
-    // Linear progression order — used to detect forward/backward status changes
-    const PROGRESSION = ['pending', 'processing', 'shipped', 'delivered'];
+    const PROGRESSION = [
+        'pending',
+        'processing',
+        'shipped',
+        'delivered'
+    ];
 
     private static array $messages = [
         'pending'    => 'Your order has been placed. Payment is pending.',

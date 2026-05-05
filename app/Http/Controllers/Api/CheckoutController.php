@@ -40,11 +40,10 @@ class CheckoutController extends BaseController
     {
         try {
             return DB::transaction(function () use ($request) {
-                $customerId      = $request->customer_id; // nullable for guest
+                $customerId      = $request->customer_id;
                 $requestProducts = collect($request->products);
                 $productIds      = $requestProducts->pluck('product_id')->toArray();
 
-                // Cart validation only applies for logged-in customers
                 if ($customerId) {
                     $cartProductIds = Cart::where('customer_id', $customerId)
                         ->whereIn('product_id', $productIds)
@@ -157,7 +156,6 @@ class CheckoutController extends BaseController
 
     private function handleShippingAddress(CheckoutRequest $request): array
     {
-        // Use saved address only if customer is logged in and address_id is provided
         if ($request->customer_id && $request->address_id) {
             $address = CustomerAddress::with(['city', 'state', 'country'])->find($request->address_id);
             return [
@@ -172,10 +170,8 @@ class CheckoutController extends BaseController
             ];
         }
 
-        // Use shipping_address object from request
         $shipping = $request->shipping_address;
 
-        // Save address only if customer is logged in and save_address is true
         if ($request->customer_id && !empty($shipping['save_address'])) {
             CustomerAddress::create([
                 'customer_id'   => $request->customer_id,
@@ -209,7 +205,6 @@ class CheckoutController extends BaseController
 
     private function handleBillingAddress(CheckoutRequest $request, array $shippingData): array
     {
-        // Default: billing same as shipping (when billing_same_as_shipping is 1 or null/not sent)
         $sameAsShipping = $request->input('billing_same_as_shipping', 1);
         $sameAsShipping = (int) $sameAsShipping === 1;
 
@@ -224,7 +219,6 @@ class CheckoutController extends BaseController
             ];
         }
 
-        // billing_same_as_shipping = 0 → use billing_address object from request
         $billing = $request->billing_address;
 
         return [

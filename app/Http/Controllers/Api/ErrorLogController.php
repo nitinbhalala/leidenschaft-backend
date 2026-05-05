@@ -72,7 +72,6 @@ class ErrorLogController extends BaseController
                 return $this->success(null, 'Error logs deleted successfully');
             }
 
-            // single delete
             $log = ErrorLog::findOrFail($id);
 
             $log->delete();

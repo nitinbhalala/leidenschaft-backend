@@ -150,7 +150,6 @@ class OrderController extends BaseController
 
         $refundStatus = null;
 
-        // If payment was already made, trigger Razorpay refund
         if ($previousStatus === OrderStatus::PROCESSING && $order->payment && $order->payment->status === 'completed') {
             try {
                 $key    = getSetting('razorpay_key_id');
@@ -257,7 +256,6 @@ class OrderController extends BaseController
 
         $refundStatus = null;
 
-        // Trigger refund if admin is cancelling a paid order
         if (
             $newStatus === OrderStatus::CANCELLED &&
             $previousStatus !== OrderStatus::CANCELLED &&
@@ -290,10 +288,10 @@ class OrderController extends BaseController
         }
 
         $response = Order::with([
-                'items.product:id,name,slug,price',
-                'items.product.images',
-                'payment',
-            ])->find($id);
+            'items.product:id,name,slug,price',
+            'items.product.images',
+            'payment',
+        ])->find($id);
 
         if ($refundStatus === 'initiated') {
             return $this->success($response, "Order cancelled and refund initiated successfully");

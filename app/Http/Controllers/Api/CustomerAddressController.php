@@ -78,10 +78,6 @@ class CustomerAddressController extends BaseController
             return $this->error("Address not found", 404);
         }
 
-        /* if ($address->is_default == 1) {
-            return $this->error("Please set another address as default before deleting this one", 400);
-        } */
-
         $address->delete();
 
         return $this->success(null, "Address deleted successfully");
