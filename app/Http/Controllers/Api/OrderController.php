@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\OrderStatus;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Models\Order;
@@ -144,12 +145,13 @@ class OrderController extends BaseController
         }
 
         $previousStatus = $order->status;
-        $order->update(['status' => 'cancelled']);
+        $order->update(['status' => OrderStatus::CANCELLED]);
+        $order->appendOrderStatus(OrderStatus::CANCELLED);
 
         $refundStatus = null;
 
         // If payment was already made, trigger Razorpay refund
-        if ($previousStatus === 'processing' && $order->payment && $order->payment->status === 'completed') {
+        if ($previousStatus === OrderStatus::PROCESSING && $order->payment && $order->payment->status === 'completed') {
             try {
                 $key    = getSetting('razorpay_key_id');
                 $secret = getSetting('razorpay_key_secret');
@@ -248,12 +250,17 @@ class OrderController extends BaseController
         $previousStatus = $order->status;
         $order->update($request->validated());
 
+        $newStatus = $request->input('status');
+        if ($newStatus && $newStatus !== $previousStatus) {
+            $order->appendOrderStatus($newStatus);
+        }
+
         $refundStatus = null;
 
         // Trigger refund if admin is cancelling a paid order
         if (
-            $request->input('status') === 'cancelled' &&
-            $previousStatus !== 'cancelled' &&
+            $newStatus === OrderStatus::CANCELLED &&
+            $previousStatus !== OrderStatus::CANCELLED &&
             $order->payment &&
             $order->payment->status === 'completed'
         ) {
@@ -315,9 +322,16 @@ class OrderController extends BaseController
     public function store(StoreOrderRequest $request)
     {
         try {
-            $data                  = $request->validated();
-            $data['order_number']  = 'ORD-' . strtoupper(uniqid());
-            $data['placed_at']     = now();
+            $data                 = $request->validated();
+            $data['order_number'] = 'ORD-' . strtoupper(uniqid());
+            $data['placed_at']    = now();
+
+            $initialStatus        = $data['status'] ?? OrderStatus::PENDING;
+            $data['order_status'] = [[
+                'status'  => $initialStatus,
+                'date'    => now()->format('j M Y'),
+                'message' => OrderStatus::message($initialStatus),
+            ]];
 
             $order = Order::create($data);
 

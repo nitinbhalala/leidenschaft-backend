@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\OrderStatus;
 use App\Models\Cart;
 use App\Models\City;
 use App\Models\Country;
@@ -85,7 +86,12 @@ class CheckoutController extends BaseController
                     'shipping'                 => $totals['shipping'],
                     'total'                    => $totals['total'],
                     'payment_method'           => $request->payment_method,
-                    'status'                   => 'pending',
+                    'status'                   => OrderStatus::PENDING,
+                    'order_status'             => [[
+                        'status'  => OrderStatus::PENDING,
+                        'date'    => now()->format('j M Y'),
+                        'message' => OrderStatus::message(OrderStatus::PENDING),
+                    ]],
                 ]);
 
                 foreach ($requestProducts as $item) {

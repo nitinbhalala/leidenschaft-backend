@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\OrderStatus;
 use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use App\Models\ProductImage;
@@ -355,6 +356,32 @@ class ProductController extends BaseController
             return $this->error($e->getMessage(), 500);
         }
     } */
+
+    public function bestSelling(Request $request)
+    {
+        try {
+            $perPage = $request->input('per_page', 10);
+
+            $products = Product::with(['category', 'subCategory', 'images'])
+                ->where('status', 1)
+                ->whereHas('orderItems.order', function ($q) {
+                    $q->whereNotIn('status', [OrderStatus::CANCELLED, OrderStatus::FAILED, OrderStatus::PENDING]);
+                })
+                ->withCount([
+                    'orderItems as total_orders' => function ($q) {
+                        $q->whereHas('order', function ($oq) {
+                            $oq->whereNotIn('status', [OrderStatus::CANCELLED, OrderStatus::FAILED, OrderStatus::PENDING]);
+                        });
+                    },
+                ])
+                ->orderBy('total_orders', 'desc')
+                ->paginate($perPage);
+
+            return $this->success($products, 'Best selling products fetched successfully');
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
+        }
+    }
 
     public function toggleActive($id)
     {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\OrderStatus;
 use App\Http\Requests\RefundRequest;
 use App\Mail\OrderInvoiceMail;
 use App\Models\Cart;
@@ -74,9 +75,10 @@ class PaymentController extends BaseController
             if ($order) {
                 $order->update([
                     'payment_id' => $paymentId,
-                    'status'     => 'processing',
+                    'status'     => OrderStatus::PROCESSING,
                     'placed_at'  => now(),
                 ]);
+                $order->appendOrderStatus(OrderStatus::PROCESSING);
 
                 Cart::where('customer_id', $order->customer_id)
                     ->whereIn('product_id', $order->product_ids ?? [])

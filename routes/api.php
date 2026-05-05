@@ -411,6 +411,7 @@ Route::prefix('offer-templates')->group(function () {
 Route::prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index']);
     Route::get('/search', [ProductController::class, 'search']);
+    Route::get('/best-selling', [ProductController::class, 'bestSelling']);
     Route::get('/{product:slug}', [ProductController::class, 'customerShow']);
     Route::get('/{product_id}/reviews', [ProductReviewController::class, 'index']);
 });

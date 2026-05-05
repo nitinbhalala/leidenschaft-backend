@@ -82,4 +82,9 @@ class Product extends Model
     {
         return $this->hasOne(ProductInventory::class, 'product_id');
     }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class, 'product_id');
+    }
 }
