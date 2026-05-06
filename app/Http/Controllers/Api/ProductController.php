@@ -7,6 +7,7 @@ use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductInventory;
+use App\Models\ProductReview;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -123,20 +124,13 @@ class ProductController extends BaseController
                 return $this->error('Product not found', 404);
             }
 
-            $product->load(['category', 'subCategory', 'images', 'reviews.customer:id,name']);
+            $product->load(['category', 'subCategory', 'images']);
 
-            $reviews = $product->reviews->map(function ($review) {
-                $data = $review->toArray();
-                $data['customer_name'] = $review->customer?->name;
-                unset($data['customer']);
-                return $data;
-            });
+            $data = $product->toArray();
 
-            $data                  = $product->toArray();
-            $data['reviews']       = $reviews;
-            $data['total_reviews'] = $product->reviews->count();
+            $data['total_reviews'] = ProductReview::where('product_id', $product->id)->count();
             $data['avg_rating']    = $data['total_reviews'] > 0
-                ? round($product->reviews->avg('rating'), 1)
+                ? round(ProductReview::where('product_id', $product->id)->avg('rating'), 1)
                 : 0;
 
             return $this->success($data, 'Product fetched successfully');

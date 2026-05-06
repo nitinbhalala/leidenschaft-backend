@@ -417,7 +417,8 @@ Route::prefix('products')->group(function () {
 });
 
 Route::prefix('product-reviews')->group(function () {
-    Route::post('/', [ProductReviewController::class, 'store']);
+    Route::get('/{slug}', [ProductReviewController::class, 'reviewsBySlug']);
+    Route::post('/create', [ProductReviewController::class, 'store']);
     Route::delete('/{productReview}', [ProductReviewController::class, 'destroy']);
 });
 

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductReviewRequest extends FormRequest
 {
@@ -23,10 +24,15 @@ class ProductReviewRequest extends FormRequest
     {
         return [
             'product_id' => 'required|exists:products,id',
-            'customer_id' => 'required|exists:customers,id',
-            'name' => 'required|string|max:255',
+            'customer_id' => [
+                'required',
+                'exists:customers,id',
+                Rule::unique('product_reviews')
+                    ->where('product_id', $this->input('product_id')),
+            ],
             'rating' => 'required|integer|min:1|max:5',
-            'review' => 'required|string|max:2000'
+            'title' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
         ];
     }
 
@@ -35,18 +41,16 @@ class ProductReviewRequest extends FormRequest
         return [
             'product_id.required' => 'Product is required.',
             'product_id.exists' => 'Selected product is invalid.',
+            'customer_id.unique' => 'You have already reviewed this product.',
             'customer_id.required' => 'Customer is required.',
             'customer_id.exists' => 'Selected customer is invalid.',
-            'name.required' => 'Name is required.',
-            'name.string' => 'Name must be a string.',
-            'name.max' => 'Name may not be greater than 255 characters.',
             'rating.required' => 'Rating is required.',
             'rating.integer' => 'Rating must be a number.',
             'rating.min' => 'Rating must be at least 1.',
             'rating.max' => 'Rating may not be greater than 5.',
-            'review.required' => 'Review is required.',
-            'review.string' => 'Review must be a string.',
-            'review.max' => 'Review may not be greater than 2000 characters.',
+            'title.string' => 'Title must be a string.',
+            'title.max' => 'Title may not be greater than 255 characters.',
+            'description.string' => 'Description must be a string.',
         ];
     }
 }

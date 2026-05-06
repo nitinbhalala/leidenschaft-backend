@@ -16,6 +16,7 @@ class OrderItem extends Model
         'quantity',
         'price',
         'total',
+        'review_id',
     ];
 
     public function order()
@@ -31,5 +32,10 @@ class OrderItem extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function review()
+    {
+        return $this->belongsTo(ProductReview::class, 'review_id');
     }
 }

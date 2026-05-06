@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 
 class OrderController extends BaseController
@@ -31,6 +32,21 @@ class OrderController extends BaseController
         }
 
         $orders = $query->paginate($request->input('per_page', 10));
+
+        $orders->getCollection()->transform(function ($order) {
+            $reviewedProductIds = OrderItem::where('order_id', $order->id)
+                ->whereNotNull('review_id')
+                ->pluck('review_id', 'product_id');
+
+            $order->product_ids = collect($order->product_ids)->map(function ($productId) use ($reviewedProductIds) {
+                return [
+                    'product_id'  => $productId,
+                    'has_reviewed' => $reviewedProductIds->has($productId),
+                ];
+            })->values();
+
+            return $order;
+        });
 
         return $this->success($orders, "Orders fetched successfully");
     }

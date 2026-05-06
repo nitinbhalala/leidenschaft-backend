@@ -227,7 +227,7 @@ class AuthController extends BaseController
         $customer = Customer::where('email', $request->email)->first();
 
         if (!$customer) {
-            return $this->error(null, 'No account found with this email address.', 401);
+            return $this->error('No account found with this email address.', 401);
         }
 
         $resetToken = Str::random(64);
