@@ -7,6 +7,7 @@ use App\Http\Requests\ProductReviewRequest;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductReview;
+use Exception;
 use Illuminate\Http\Request;
 
 class ProductReviewController extends BaseController
@@ -50,6 +51,31 @@ class ProductReviewController extends BaseController
         return $this->success($review, "Review added successfully", 201);
     }
 
+    public function toggleStatus($id)
+    {
+        try {
+            $admin = request()->attributes->get('admin');
+
+            if (!$admin) {
+                return $this->error('Unauthorized. Only admin can update review status.', 403);
+            }
+
+            $review = ProductReview::find($id);
+
+            if (!$review) {
+                return $this->error('Review not found', 404);
+            }
+
+            $review->update([
+                'status' => !$review->status
+            ]);
+
+            return $this->success($review, 'Review status updated successfully');
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
     public function destroy(ProductReview $productReview)
     {
         $productReview->delete();
@@ -62,6 +88,7 @@ class ProductReviewController extends BaseController
         $product = Product::where('slug', $slug)->firstOrFail();
 
         $reviewCollection = ProductReview::where('product_id', $product->id)
+            ->where('status', 1)
             ->with('customer:id,name')
             ->latest()
             ->paginate($request->input('per_page', 10));

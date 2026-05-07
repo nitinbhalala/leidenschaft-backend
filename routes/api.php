@@ -152,7 +152,8 @@ Route::prefix('admin')->group(function () {
         });
 
         // Product Reviews
-        Route::delete('product-reviews/{productReview}', [ProductReviewController::class, 'destroy']);
+        Route::delete('reviews/{productReview}', [ProductReviewController::class, 'destroy']);
+        Route::post('reviews/{id}/toggle-status', [ProductReviewController::class, 'toggleStatus']);
 
         // Product Inventory
         Route::prefix('inventory')->group(function () {
