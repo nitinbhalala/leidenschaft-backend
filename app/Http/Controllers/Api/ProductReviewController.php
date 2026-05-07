@@ -12,14 +12,14 @@ use Illuminate\Http\Request;
 
 class ProductReviewController extends BaseController
 {
-    public function index($product_id)
+    public function index($product_id, Request $request)
     {
         $reviewCollection = ProductReview::where('product_id', $product_id)
             ->with('customer:id,name,avatar')
             ->latest()
-            ->get();
+            ->paginate($request->input('per_page', 10));
 
-        $reviews = $reviewCollection->map(function ($review) {
+        $reviews = $reviewCollection->getCollection()->map(function ($review) {
             $data = $review->toArray();
             $data['customer_name'] = $review->customer?->name;
             unset($data['customer']);
@@ -27,10 +27,16 @@ class ProductReviewController extends BaseController
         });
 
         return $this->success([
-            'total_reviews' => $reviewCollection->count(),
-            'avg_rating'    => $reviewCollection->count() > 0
-                ? round($reviewCollection->avg('rating'), 1)
+            'total_reviews' => ProductReview::where('product_id', $product_id)->count(),
+            'avg_rating'    => ProductReview::where('product_id', $product_id)->avg('rating')
+                ? round(ProductReview::where('product_id', $product_id)->avg('rating'), 1)
                 : 0,
+            'pagination'    => [
+                'current_page' => $reviewCollection->currentPage(),
+                'last_page'    => $reviewCollection->lastPage(),
+                'per_page'     => $reviewCollection->perPage(),
+                'total'        => $reviewCollection->total(),
+            ],
             'reviews'       => $reviews,
         ], "Reviews fetched successfully");
     }
