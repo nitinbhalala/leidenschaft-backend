@@ -29,6 +29,13 @@ class SocialAuthController extends BaseController
             "services.$provider.client_secret" => $settings["{$provider}_client_secret"] ?? null,
             "services.$provider.redirect"      => $settings["{$provider}_redirect_uri"] ?? null,
         ]);
+
+        // Fix: Force Facebook to use a stable API version that supports email scope
+        if ($provider === 'facebook') {
+            config([
+                'services.facebook.version' => 'v19.0',
+            ]);
+        }
     }
 
     public function redirect(string $provider, \Illuminate\Http\Request $request)
@@ -45,7 +52,7 @@ class SocialAuthController extends BaseController
         $driver = Socialite::driver($provider)->stateless();
 
         if ($provider === 'facebook') {
-            $driver->scopes(['email', 'public_profile']);
+            $driver->scopes(['public_profile'])->fields(['id', 'name', 'email', 'picture']);
         }
 
         return $driver
@@ -67,7 +74,7 @@ class SocialAuthController extends BaseController
             $driver = Socialite::driver($provider)->stateless();
 
             if ($provider === 'facebook') {
-                $driver->scopes(['email', 'public_profile']);
+                $driver->scopes(['public_profile'])->fields(['id', 'name', 'email', 'picture']);
             }
 
             $socialUser = $driver->user();
