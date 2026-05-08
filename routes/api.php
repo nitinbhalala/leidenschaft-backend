@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AdminAuthController;
+use App\Http\Controllers\Api\GetTheLookController;
 use App\Http\Controllers\Api\Admin\PermissionController;
 use App\Http\Controllers\Api\Admin\ProductInventoryController;
 use App\Http\Controllers\Api\Admin\ProfileController;
@@ -149,6 +150,16 @@ Route::prefix('admin')->group(function () {
             Route::get('/{id}', [ProductController::class, 'show']);
             Route::post('/{id}', [ProductController::class, 'update']);
             Route::delete('/{id}', [ProductController::class, 'destroy']);
+        });
+
+        // Get The Look
+        Route::prefix('get-the-look')->group(function () {
+            Route::get('/', [GetTheLookController::class, 'index']);
+            Route::post('/', [GetTheLookController::class, 'store']);
+            Route::get('/{id}', [GetTheLookController::class, 'show']);
+            Route::post('/{id}', [GetTheLookController::class, 'update']);
+            Route::delete('/{id}', [GetTheLookController::class, 'destroy']);
+            Route::post('/{id}/toggle-status', [GetTheLookController::class, 'toggleStatus']);
         });
 
         // Product Reviews
@@ -448,3 +459,5 @@ Route::prefix('setting')->group(function () {
     Route::get('/footer', [SettingController::class, 'getFooterSettings']);
     Route::get('/{key}', [SettingController::class, 'getByKey']);
 });
+
+Route::get('/get-the-look', [GetTheLookController::class, 'customerIndex']);
