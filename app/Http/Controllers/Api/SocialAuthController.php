@@ -33,13 +33,25 @@ class SocialAuthController extends BaseController
 
     public function redirect(string $provider, \Illuminate\Http\Request $request)
     {
+        $this->validateProvider($provider);
+
         $this->setSocialConfigFromDB($provider);
 
-        $frontendUrl = rtrim($request->header('Origin', $request->header('Referer', '')), '/');
+        $frontendUrl = rtrim(
+            $request->header('Origin', $request->header('Referer', '')),
+            '/'
+        );
 
-        return Socialite::driver($provider)
-            ->stateless()
-            ->with(['state' => $frontendUrl])
+        $driver = Socialite::driver($provider)->stateless();
+
+        if ($provider === 'facebook') {
+            $driver->scopes(['email', 'public_profile']);
+        }
+
+        return $driver
+            ->with([
+                'state' => base64_encode($frontendUrl)
+            ])
             ->redirect();
     }
 
@@ -47,10 +59,18 @@ class SocialAuthController extends BaseController
     {
         $this->setSocialConfigFromDB($provider);
 
-        $frontendUrl = rtrim($request->input('state', ''), '/');
+        $frontendUrl = base64_decode($request->input('state', ''));
+
+        $frontendUrl = rtrim($frontendUrl, '/');
 
         try {
-            $socialUser = Socialite::driver($provider)->stateless()->user();
+            $driver = Socialite::driver($provider)->stateless();
+
+            if ($provider === 'facebook') {
+                $driver->scopes(['email', 'public_profile']);
+            }
+
+            $socialUser = $driver->user();
         } catch (Throwable $e) {
             return redirect($frontendUrl . '?error=' . urlencode($e->getMessage()));
         }
