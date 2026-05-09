@@ -45,6 +45,11 @@ class HomePageRequest extends FormRequest
             'section_2_bt_text' => 'nullable|string|max:255',
             'section_2_second_title' => 'nullable|string|max:255',
             'section_2_second_subtitle' => 'nullable|string',
+            'section_2_image' => 'nullable|image|mimes:jpg,jpeg,png,webp',
+            'section_2_product_ids' => 'nullable|array',
+            'section_2_product_ids.*' => 'nullable',
+            'section_2_product_position' => 'nullable|array',
+            'section_2_product_position.*' => 'nullable|string',
             'section_2_status' => 'nullable|boolean',
 
             /*

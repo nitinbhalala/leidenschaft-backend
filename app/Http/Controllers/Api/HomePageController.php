@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\HomePageRequest;
 use App\Models\HomePageSetting;
+use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
 
 class HomePageController extends BaseController
@@ -11,7 +12,26 @@ class HomePageController extends BaseController
     public function index()
     {
         $settings = HomePageSetting::firstOrCreate(['id' => 1]);
-        return $this->success($settings, 'Home page settings fetched successfully');
+
+        $data = $settings->toArray();
+
+        $position = $settings->section_2_product_position ?? [];
+
+        $data['section_2_products'] = Product::with(['images'])
+            ->whereIn('id', $settings->section_2_product_ids ?? [])
+            ->where('status', 1)
+            ->get(['id', 'name', 'price'])
+            ->map(function ($product) use ($position) {
+                return [
+                    'id'       => $product->id,
+                    'name'     => $product->name,
+                    'price'    => $product->price,
+                    'image'    => $product->images->first()?->image ?? null,
+                    'position' => $position[(string) $product->id] ?? null,
+                ];
+            });
+
+        return $this->success($data, 'Home page settings fetched successfully');
     }
 
     public function update(HomePageRequest $request)
@@ -21,8 +41,13 @@ class HomePageController extends BaseController
 
         $imageFields = [
             'section_1_image',
-            'section_7_img_1', 'section_7_img_2', 'section_7_img_3', 'section_7_img_4',
-            'section_8_img_1', 'section_8_img_2',
+            'section_2_image',
+            'section_7_img_1',
+            'section_7_img_2',
+            'section_7_img_3',
+            'section_7_img_4',
+            'section_8_img_1',
+            'section_8_img_2',
         ];
 
         foreach ($imageFields as $field) {

@@ -24,6 +24,9 @@ class HomePageSetting extends Model
         'section_2_bt_text',
         'section_2_second_title',
         'section_2_second_subtitle',
+        'section_2_image',
+        'section_2_product_ids',
+        'section_2_product_position',
         'section_2_status',
 
         // Section 3 - Explore Categories
@@ -82,10 +85,13 @@ class HomePageSetting extends Model
         'section_7_status' => 'integer',
         'section_8_status' => 'integer',
         'section_9_status' => 'integer',
+        'section_2_product_ids' => 'array',
+        'section_2_product_position' => 'array',
     ];
 
     protected array $imageFields = [
         'section_1_image',
+        'section_2_image',
         'section_7_img_1',
         'section_7_img_2',
         'section_7_img_3',
