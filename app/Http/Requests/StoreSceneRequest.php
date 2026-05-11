@@ -22,7 +22,6 @@ class StoreSceneRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title'      => 'required|string|max:255',
             'image'      => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
             'status'     => 'nullable|integer|min:0|max:1',
         ];

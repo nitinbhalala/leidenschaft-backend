@@ -48,8 +48,7 @@ class HomePageRequest extends FormRequest
             'section_2_image' => 'nullable|image|mimes:jpg,jpeg,png,webp',
             'section_2_product_ids' => 'nullable|array',
             'section_2_product_ids.*' => 'nullable',
-            'section_2_product_position' => 'nullable|array',
-            'section_2_product_position.*' => 'nullable|string',
+            'section_2_product_position' => 'nullable|string',
             'section_2_status' => 'nullable|boolean',
 
             /*

@@ -15,19 +15,23 @@ class HomePageController extends BaseController
 
         $data = $settings->toArray();
 
-        $position = $settings->section_2_product_position ?? [];
+        $position = collect($settings->section_2_product_position ?? [])
+            ->keyBy('product_id')
+            ->toArray();
 
         $data['section_2_products'] = Product::with(['images'])
             ->whereIn('id', $settings->section_2_product_ids ?? [])
             ->where('status', 1)
-            ->get(['id', 'name', 'price'])
+            ->get(['id', 'name', 'price', 'slug'])
             ->map(function ($product) use ($position) {
+                $pos = $position[(string) $product->id] ?? null;
                 return [
                     'id'       => $product->id,
                     'name'     => $product->name,
                     'price'    => $product->price,
+                    'slug'     => $product->slug,
                     'image'    => $product->images->first()?->image ?? null,
-                    'position' => $position[(string) $product->id] ?? null,
+                    'position' => $pos ? ['x' => $pos['x'], 'y' => $pos['y']] : null,
                 ];
             });
 
@@ -60,6 +64,10 @@ class HomePageController extends BaseController
             } else {
                 unset($data[$field]);
             }
+        }
+
+        if (isset($data['section_2_product_position']) && is_string($data['section_2_product_position'])) {
+            $data['section_2_product_position'] = json_decode($data['section_2_product_position'], true) ?? [];
         }
 
         $settings->update($data);

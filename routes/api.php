@@ -146,6 +146,7 @@ Route::prefix('admin')->group(function () {
         Route::prefix('products')->group(function () {
             Route::get('/', [ProductController::class, 'index']);
             Route::post('/', [ProductController::class, 'store']);
+            Route::get('/list', [ProductController::class, 'list']);
             Route::get('/{id}/reviews', [ProductReviewController::class, 'index']);
             Route::post('/{id}/toggle-status', [ProductController::class, 'toggleActive']);
             Route::get('/{id}', [ProductController::class, 'show']);

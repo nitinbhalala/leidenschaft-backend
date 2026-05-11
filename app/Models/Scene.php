@@ -11,7 +11,6 @@ class Scene extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title',
         'image_url',
         'status'
     ];

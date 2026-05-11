@@ -27,7 +27,6 @@ class SceneController extends BaseController
             $path = $request->file('image')->store('scenes', 'public');
 
             $scene = Scene::create([
-                'title'     => $request->title,
                 'image_url' => Storage::url($path),
                 'status'    => $request->status ?? 'draft',
             ]);
@@ -56,7 +55,9 @@ class SceneController extends BaseController
     public function show(Scene $scene)
     {
         try {
-            return $this->success($scene->load('pins.product'), 'Scene fetched successfully');
+            $scene->load(['pins.product' => fn($q) => $q->select('id', 'name')]);
+
+            return $this->success($scene, 'Scene fetched successfully');
         } catch (Exception $e) {
             return $this->error($e->getMessage(), 500);
         }
@@ -72,14 +73,13 @@ class SceneController extends BaseController
                 $scene->image_url = Storage::url($path);
             }
 
-            $scene->fill($request->only(['title', 'status']))->save();
+            $scene->fill($request->only(['status']))->save();
 
             if ($request->has('pins')) {
                 $pins = json_decode($request->input('pins'), true);
 
                 $incomingIds = collect($pins)->pluck('id')->filter()->values()->toArray();
 
-                // Delete pins that are not in incoming list
                 $scene->pins()->whereNotIn('id', $incomingIds)->delete();
 
                 foreach ($pins as $i => $p) {
@@ -91,10 +91,8 @@ class SceneController extends BaseController
                     ];
 
                     if (!empty($p['id'])) {
-                        // Update existing pin
                         $scene->pins()->where('id', $p['id'])->update($data);
                     } else {
-                        // Create new pin
                         $scene->pins()->create($data);
                     }
                 }

@@ -22,7 +22,6 @@ class UpdateSceneRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title'   => 'sometimes|string|max:255',
             'image'   => 'sometimes|image|mimes:jpg,jpeg,png,webp|max:5120',
             'status'  => 'nullable|integer|min:0|max:1',
         ];

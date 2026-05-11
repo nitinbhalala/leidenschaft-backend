@@ -346,6 +346,26 @@ class ProductController extends BaseController
         }
     }
 
+    public function list()
+    {
+        try {
+            $products = Product::with(['images' => function ($q) {
+                $q->limit(1);
+            }])
+                ->where('status', 1)
+                ->get(['id', 'name'])
+                ->map(fn($product) => [
+                    'id'    => $product->id,
+                    'name'  => $product->name,
+                    'image' => $product->images->first()?->image ?? null,
+                ]);
+
+            return $this->success($products, 'Products fetched successfully');
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
     public function search(Request $request)
     {
         try {
