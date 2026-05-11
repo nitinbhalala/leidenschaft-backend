@@ -20,7 +20,7 @@ class Scene extends Model
         $data = parent::toArray();
 
         if (!empty($data['image_url'])) {
-            $data['image_url'] = asset('public/storage/' . $data['image_url']);
+            $data['image_url'] = asset('storage/' . $data['image_url']);
         }
 
         return $data;

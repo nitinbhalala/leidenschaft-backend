@@ -13,9 +13,15 @@ class SceneController extends BaseController
     public function index()
     {
         try {
-            $scenes = Scene::withCount('pins')->latest()->get();
+            $query = Scene::withCount('pins')->latest();
 
-            return $this->success($scenes, 'Scenes fetched successfully');
+            $admin = request()->attributes->get('admin');
+
+            if (!$admin) {
+                $query->where('status', 1);
+            }
+
+            return $this->success($query->get(), 'Scenes fetched successfully');
         } catch (Exception $e) {
             return $this->error($e->getMessage(), 500);
         }
