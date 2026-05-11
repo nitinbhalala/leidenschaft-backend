@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('get_the_look', function (Blueprint $table) {
+        Schema::create('scenes', function (Blueprint $table) {
             $table->id();
-            $table->string('image');
-            $table->json('product_ids');
-            $table->json('position');
+            $table->string('title');
+            $table->string('image_url');
             $table->integer('status')->default(1);
             $table->timestamps();
         });
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('get_the_look');
+        Schema::dropIfExists('scenes');
     }
 };

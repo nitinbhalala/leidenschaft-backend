@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AdminAuthController;
-use App\Http\Controllers\Api\GetTheLookController;
 use App\Http\Controllers\Api\Admin\PermissionController;
 use App\Http\Controllers\Api\Admin\ProductInventoryController;
 use App\Http\Controllers\Api\Admin\ProfileController;
@@ -18,9 +17,10 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\ErrorLogController;
 use App\Http\Controllers\Api\EssenceController;
-use App\Http\Controllers\Api\InteriorController;
 use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\GetTheLookController;
 use App\Http\Controllers\Api\HomePageController;
+use App\Http\Controllers\Api\InteriorController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OfferController;
@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PolicyController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductReviewController;
+use App\Http\Controllers\Api\SceneController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\SupportChatController;
@@ -150,16 +151,6 @@ Route::prefix('admin')->group(function () {
             Route::get('/{id}', [ProductController::class, 'show']);
             Route::post('/{id}', [ProductController::class, 'update']);
             Route::delete('/{id}', [ProductController::class, 'destroy']);
-        });
-
-        // Get The Look
-        Route::prefix('get-the-look')->group(function () {
-            Route::get('/', [GetTheLookController::class, 'index']);
-            Route::post('/', [GetTheLookController::class, 'store']);
-            Route::get('/{id}', [GetTheLookController::class, 'show']);
-            Route::post('/{id}', [GetTheLookController::class, 'update']);
-            Route::delete('/{id}', [GetTheLookController::class, 'destroy']);
-            Route::post('/{id}/toggle-status', [GetTheLookController::class, 'toggleStatus']);
         });
 
         // Product Reviews
@@ -319,6 +310,16 @@ Route::prefix('admin')->group(function () {
             Route::get('/{supportId}/unread-count', [SupportChatController::class, 'unreadCount']);
             Route::post('/{supportId}/mark-all-read', [SupportChatController::class, 'markAllAsRead']);
         });
+
+        // Scenes
+        Route::prefix('scenes')->group(function () {
+            Route::get('/', [SceneController::class, 'index']);
+            Route::post('/', [SceneController::class, 'store']);
+            Route::get('/{scene}', [SceneController::class, 'show']);
+            Route::post('/{scene}', [SceneController::class, 'update']);
+            Route::delete('/{scene}', [SceneController::class, 'destroy']);
+            Route::post('/{id}/toggle-status', [SceneController::class, 'toggleStatus']);
+        });
     });
 });
 
@@ -460,4 +461,4 @@ Route::prefix('setting')->group(function () {
     Route::get('/{key}', [SettingController::class, 'getByKey']);
 });
 
-Route::get('/get-the-look', [GetTheLookController::class, 'customerIndex']);
+Route::get('/scenes/{scene}', [SceneController::class, 'show']);
