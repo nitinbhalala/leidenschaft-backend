@@ -27,7 +27,7 @@ class SceneController extends BaseController
             $path = $request->file('image')->store('scenes', 'public');
 
             $scene = Scene::create([
-                'image_url' => Storage::url($path),
+                'image_url' => $path,
                 'status'    => $request->status ?? 'draft',
             ]);
 
@@ -67,10 +67,9 @@ class SceneController extends BaseController
     {
         try {
             if ($request->hasFile('image')) {
-                $old = str_replace('/storage/', '', $scene->image_url);
-                Storage::disk('public')->delete($old);
+                Storage::disk('public')->delete($scene->getRawOriginal('image_url'));
                 $path = $request->file('image')->store('scenes', 'public');
-                $scene->image_url = Storage::url($path);
+                $scene->image_url = $path;
             }
 
             $scene->fill($request->only(['status']))->save();
@@ -109,8 +108,7 @@ class SceneController extends BaseController
         try {
             $scene->pins()->delete();
 
-            $path = str_replace('/storage/', '', $scene->image_url);
-            Storage::disk('public')->delete($path);
+            Storage::disk('public')->delete($scene->getRawOriginal('image_url'));
 
             $scene->delete();
 
