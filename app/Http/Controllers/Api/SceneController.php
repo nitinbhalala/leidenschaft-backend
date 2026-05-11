@@ -122,6 +122,41 @@ class SceneController extends BaseController
         }
     }
 
+    public function customerIndex()
+    {
+        try {
+            $scenes = Scene::where('status', 1)
+                ->with(['pins.product' => function ($query) {
+                    $query->select('id', 'name', 'slug', 'price')
+                        ->with(['images' => fn($q) => $q->select('product_id', 'image')->limit(1)]);
+                }])
+                ->latest()
+                ->get()
+                ->map(function ($scene) {
+                    $data        = $scene->toArray();
+                    $data['pins'] = $scene->pins->map(function ($pin) {
+                        return [
+                            'id'         => $pin->id,
+                            'x_percent'  => $pin->x_percent,
+                            'y_percent'  => $pin->y_percent,
+                            'product'    => $pin->product ? [
+                                'id'    => $pin->product->id,
+                                'name'  => $pin->product->name,
+                                'slug'  => $pin->product->slug,
+                                'price' => $pin->product->price,
+                                'image' => $pin->product->images->first()?->image,
+                            ] : null,
+                        ];
+                    });
+                    return $data;
+                });
+
+            return $this->success($scenes, 'Scenes fetched successfully');
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
     public function toggleStatus($id)
     {
         try {

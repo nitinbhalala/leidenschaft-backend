@@ -461,4 +461,4 @@ Route::prefix('setting')->group(function () {
     Route::get('/{key}', [SettingController::class, 'getByKey']);
 });
 
-Route::get('/scenes/{scene}', [SceneController::class, 'show']);
+Route::get('/scenes', [SceneController::class, 'customerIndex']);
