@@ -12,7 +12,7 @@ return [
         'http://localhost:3001',
         'http://192.168.29.152:3000',
         'http://192.168.29.152:3001',
-        'https://masters-payroll-true-fin.trycloudflare.com'
+        'https://cent-strange-newspapers-confidentiality.trycloudflare.com'
     ],
 
     'allowed_origins_patterns' => [],

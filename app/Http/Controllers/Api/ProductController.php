@@ -56,7 +56,12 @@ class ProductController extends BaseController
             }
 
             $perPage = $request->per_page ?? 10;
-            $products = $query->latest()->paginate($perPage);
+
+            if (!$admin && !$request->filled('category')) {
+                $products = $query->inRandomOrder()->paginate($perPage);
+            } else {
+                $products = $query->latest()->paginate($perPage);
+            }
 
             return $this->success($products, 'Products fetched successfully', 200);
         } catch (\Exception $e) {

@@ -21,10 +21,16 @@ class Payment extends Model
         'refund_amount',
         'refunded_at',
         'meta',
+        'reminder_sent_count',
+        'last_reminder_sent_at',
+        'reminder_completed_at',
     ];
 
     protected $casts = [
-        'meta' => 'array'
+        'meta'                  => 'array',
+        'reminder_sent_count'   => 'integer',
+        'last_reminder_sent_at' => 'datetime',
+        'reminder_completed_at' => 'datetime',
     ];
 
     public function order()

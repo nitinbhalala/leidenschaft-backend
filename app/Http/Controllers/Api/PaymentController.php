@@ -67,8 +67,9 @@ class PaymentController extends BaseController
             }
 
             $payment->update([
-                'payment_id' => $paymentId,
-                'status'     => 'completed',
+                'payment_id'            => $paymentId,
+                'status'                => 'completed',
+                'reminder_completed_at' => now(),
             ]);
 
             $order = Order::find($payment->order_id);

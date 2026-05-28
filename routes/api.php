@@ -18,7 +18,6 @@ use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\ErrorLogController;
 use App\Http\Controllers\Api\EssenceController;
 use App\Http\Controllers\Api\FaqController;
-use App\Http\Controllers\Api\GetTheLookController;
 use App\Http\Controllers\Api\HomePageController;
 use App\Http\Controllers\Api\InteriorController;
 use App\Http\Controllers\Api\LocationController;

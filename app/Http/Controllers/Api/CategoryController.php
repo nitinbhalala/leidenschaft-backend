@@ -13,14 +13,20 @@ class CategoryController extends BaseController
     {
         try {
             $query = Category::whereNull('parent_id')
-                ->with('children')
                 ->withCount('products')
                 ->withCount('children');
 
             $admin = request()->attributes->get('admin');
 
             if (!$admin) {
-                $query->where('status', 1);
+                $query->where('status', 1)
+                    ->where(function ($q) {
+                        $q->whereHas('products')
+                            ->orWhereHas('children', fn($c) => $c->whereHas('subCategoryProducts'));
+                    })
+                    ->with(['children' => fn($q) => $q->where('status', 1)->whereHas('subCategoryProducts')]);
+            } else {
+                $query->with('children');
             }
 
             $categories = $query->latest()->get();
@@ -41,7 +47,7 @@ class CategoryController extends BaseController
             $admin = request()->attributes->get('admin');
 
             if (!$admin) {
-                $query->where('status', 1);
+                $query->where('status', 1)->whereHas('subCategoryProducts');
             }
 
             if ($id) {

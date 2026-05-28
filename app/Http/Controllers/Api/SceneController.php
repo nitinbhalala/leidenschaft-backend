@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\StoreSceneRequest;
 use App\Http\Requests\UpdateSceneRequest;
 use App\Models\Scene;
+use App\Models\Setting;
 use Exception;
 use Illuminate\Support\Facades\Storage;
 
@@ -127,6 +128,12 @@ class SceneController extends BaseController
     public function customerIndex()
     {
         try {
+            $status = Setting::where('key', 'get_the_look_status')->value('value');
+
+            if ((int) $status !== 1) {
+                return $this->success([], 'Scenes fetched successfully');
+            }
+
             $scenes = Scene::where('status', 1)
                 ->with(['pins.product' => function ($query) {
                     $query->select('id', 'name', 'slug', 'price')
