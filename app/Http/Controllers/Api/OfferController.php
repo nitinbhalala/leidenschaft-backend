@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\Offer;
 use App\Http\Requests\OfferRequest;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Carbon;
 use Exception;
 
 class OfferController extends BaseController
@@ -17,7 +18,10 @@ class OfferController extends BaseController
             $admin = request()->attributes->get('admin');
 
             if (!$admin) {
-                $query->where('status', 1);
+                $today = Carbon::today();
+                $query->where('status', 1)
+                    ->where('start_date', '<=', $today)
+                    ->where('end_date', '>=', $today);
             }
 
             $offers = $query->latest()->get();
@@ -56,8 +60,15 @@ class OfferController extends BaseController
         try {
             $admin = request()->attributes->get('admin');
 
-            if (!$admin && !$offer->status) {
-                return $this->error('Offer not found', 404);
+            if (!$admin) {
+                $today = Carbon::today();
+                $isActive = $offer->status
+                    && $offer->start_date <= $today
+                    && $offer->end_date >= $today;
+
+                if (!$isActive) {
+                    return $this->error('Offer not found', 404);
+                }
             }
 
             return $this->success($offer, 'Offer fetched successfully');
