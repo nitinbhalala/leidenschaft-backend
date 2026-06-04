@@ -42,7 +42,7 @@ class SendPaymentReminderEmails extends Command
                     'name'     => $item->product->name,
                     'price'    => $item->price,
                     'quantity' => $item->quantity,
-                    'image'    => $item->product->images->first()?->image ?? null,
+                    'image'    => $this->resolveImageUrl($item->product->images->first()?->image),
                 ]);
 
             if ($products->isEmpty()) {
@@ -55,7 +55,7 @@ class SendPaymentReminderEmails extends Command
                     'name'     => $p->name,
                     'price'    => $p->price,
                     'quantity' => 1,
-                    'image'    => $p->images->first()?->image ?? null,
+                    'image'    => $this->resolveImageUrl($p->images->first()?->image),
                 ]);
             }
 
@@ -83,5 +83,18 @@ class SendPaymentReminderEmails extends Command
         $this->info("Done. {$sent} reminder email(s) sent.");
 
         return self::SUCCESS;
+    }
+
+    private function resolveImageUrl(?string $image): ?string
+    {
+        if (!$image) return null;
+
+        if (str_starts_with($image, 'http://') || str_starts_with($image, 'https://')) {
+            return $image;
+        }
+
+        $clean = ltrim(preg_replace('#^(storage/|public/)#', '', $image), '/');
+
+        return config('app.url') . '/storage/' . $clean;
     }
 }

@@ -103,6 +103,47 @@
                         </tr>
 
                         <!-- ═══════════════════════════════════════════ -->
+                        <!--  ORDER CONFIRMATION MESSAGE                -->
+                        <!-- ═══════════════════════════════════════════ -->
+                        <tr>
+                            <td style="padding:32px 40px; background:#FDFCFB; border-bottom:1px solid #F0EBE4;">
+
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <td align="center">
+
+                                            <div
+                                                style="width:72px; height:72px; border-radius:50%; background:#EDFAF3; margin:0 auto 20px; text-align:center; line-height:72px;">
+                                                <span
+                                                    style="font-size:34px; color:#1D7A4A; font-weight:bold; line-height:72px;">
+                                                    ✓
+                                                </span>
+                                            </div>
+
+                                            <p
+                                                style="margin:0 0 10px; font-family:'Playfair Display', Georgia, serif; font-size:30px; font-weight:500; color:#1A1A1A; letter-spacing:1px;">
+                                                Order Confirmed
+                                            </p>
+
+                                            <p
+                                                style="margin:0 0 14px; font-size:13px; color:#6B6560; line-height:1.9; max-width:520px;">
+                                                Thank you for your purchase. Your order has been successfully confirmed
+                                                and your invoice is attached below.
+                                            </p>
+
+                                            <p
+                                                style="margin:0; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#A3937B; font-weight:700;">
+                                                ORDER #{{ $order->order_number }}
+                                            </p>
+
+                                        </td>
+                                    </tr>
+                                </table>
+
+                            </td>
+                        </tr>
+
+                        <!-- ═══════════════════════════════════════════ -->
                         <!--  BILLING + INVOICE DETAILS                  -->
                         <!-- ═══════════════════════════════════════════ -->
                         <tr>

@@ -31,8 +31,15 @@ class PaymentReminderMail extends Mailable
 
     public function envelope(): Envelope
     {
+        $subjects = [
+            1 => "You left something behind — Complete your order ({$this->order->order_number})",
+            2 => "Your selection is still waiting — {$this->order->order_number}",
+            3 => "Don't miss out — Your order is reserved ({$this->order->order_number})",
+            4 => "Final reminder — Complete your Leidenschaft order ({$this->order->order_number})",
+        ];
+
         return new Envelope(
-            subject: "Your order is waiting – Complete your payment ({$this->order->order_number})",
+            subject: $subjects[$this->reminderDay] ?? $subjects[1],
         );
     }
 
