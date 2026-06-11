@@ -90,6 +90,7 @@ class ProductController extends BaseController
                     'material_dimensions' => $request->material_dimensions,
                     'price'               => $request->price,
                     'stock'               => $request->stock ?? 0,
+                    'sizes'               => $request->sizes,
                     'status'              => $request->status ?? 1,
                 ]);
 
@@ -120,10 +121,16 @@ class ProductController extends BaseController
         }
     }
 
-    public function customerShow(Product $product)
+    public function customerShow($slug)
     {
         try {
             $admin = request()->attributes->get('admin');
+
+            $product = Product::where('slug', $slug)->first();
+
+            if (!$product) {
+                return $this->error('Product not found', 404);
+            }
 
             if (!$admin && $product->status != 1) {
                 return $this->error('Product not found', 404);
@@ -134,7 +141,7 @@ class ProductController extends BaseController
             $data = $product->toArray();
 
             $data['total_reviews'] = ProductReview::where('product_id', $product->id)->count();
-            $data['avg_rating']    = $data['total_reviews'] > 0
+            $data['avg_rating'] = $data['total_reviews'] > 0
                 ? round(ProductReview::where('product_id', $product->id)->avg('rating'), 1)
                 : 0;
 
@@ -204,6 +211,7 @@ class ProductController extends BaseController
                     'material_dimensions' => $request->material_dimensions,
                     'price'               => $request->price,
                     'stock'               => $request->stock ?? $product->stock,
+                    'sizes'               => $request->sizes,
                     'status'              => $request->status ?? $product->status,
                 ]);
 

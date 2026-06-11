@@ -21,6 +21,7 @@ class Product extends Model
         'material_dimensions',
         'price',
         'stock',
+        'sizes',
         'status'
     ];
 
@@ -28,6 +29,7 @@ class Product extends Model
         'status' => 'integer',
         'category_id' => 'integer',
         'sub_category_id' => 'integer',
+        'sizes' => 'array',
     ];
 
     protected static function boot()
