@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\PermissionController;
+use App\Http\Controllers\Api\Admin\ProductImportController;
 use App\Http\Controllers\Api\Admin\ProductInventoryController;
 use App\Http\Controllers\Api\Admin\ProfileController;
 use App\Http\Controllers\Api\Admin\RoleController;
@@ -146,6 +147,7 @@ Route::prefix('admin')->group(function () {
             Route::get('/', [ProductController::class, 'index']);
             Route::post('/', [ProductController::class, 'store']);
             Route::get('/list', [ProductController::class, 'list']);
+            Route::post('/import', [ProductImportController::class, 'import']);
             Route::get('/{id}/reviews', [ProductReviewController::class, 'index']);
             Route::post('/{id}/toggle-status', [ProductController::class, 'toggleActive']);
             Route::get('/{id}', [ProductController::class, 'show']);
