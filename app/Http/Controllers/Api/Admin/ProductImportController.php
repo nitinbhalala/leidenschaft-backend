@@ -20,11 +20,13 @@ class ProductImportController extends BaseController
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:10240',
+            'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:51200',
         ]);
 
         set_time_limit(0);
-        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', 0);
+        ini_set('memory_limit', '2048M');
+        ini_set('default_socket_timeout', 120);
 
         try {
             $records = $this->parseFile($request->file('file'));
@@ -32,8 +34,8 @@ class ProductImportController extends BaseController
             return $this->error('Could not read the uploaded file: ' . $e->getMessage(), 422);
         }
 
-        if (empty($records['active'])) {
-            return $this->error('No active-status products were found in the uploaded file.', 422);
+        if (empty($records['products'])) {
+            return $this->error('No products were found in the uploaded file.', 422);
         }
 
         try {
@@ -42,8 +44,10 @@ class ProductImportController extends BaseController
             $categoriesCreated = [];
             $failedImages = [];
             $imported = 0;
+            $activeCount = 0;
+            $inactiveCount = 0;
 
-            foreach ($records['active'] as $record) {
+            foreach ($records['products'] as $record) {
                 [$categoryId, $subCategoryId, $createdCategoryNames] = $this->resolveCategories($record['category_candidates']);
                 $categoriesCreated = array_merge($categoriesCreated, $createdCategoryNames);
 
@@ -57,14 +61,14 @@ class ProductImportController extends BaseController
                         'material_dimensions' => $record['material_dimensions'],
                         'price'               => $record['price'],
                         'stock'               => $record['stock'],
-                        'status'              => 1,
+                        'status'              => $record['status'],
                     ]);
 
                     ProductInventory::create([
                         'product_id'          => $product->id,
                         'stock'               => $product->stock,
                         'low_stock_threshold' => 5,
-                        'is_active'           => true,
+                        'is_active'           => (bool) $record['status'],
                     ])->updateStockStatus();
 
                     return $product;
@@ -79,11 +83,13 @@ class ProductImportController extends BaseController
                 }
 
                 $imported++;
+                $record['status'] === 1 ? $activeCount++ : $inactiveCount++;
             }
 
             return $this->success([
                 'imported'           => $imported,
-                'skipped_draft'      => $records['skipped_draft'],
+                'active'             => $activeCount,
+                'inactive'           => $inactiveCount,
                 'categories_created' => array_values(array_unique($categoriesCreated)),
                 'failed_images'      => $failedImages,
             ], 'Products imported successfully');
@@ -93,7 +99,9 @@ class ProductImportController extends BaseController
     }
 
     /**
-     * Parse the uploaded CSV/XLSX file into grouped, active-only product records.
+     * Parse the uploaded CSV/XLSX file into grouped product records.
+     * Every handle in the file is imported; its DB `status` is set to 1 when
+     * the file's Status column is "active" for that handle, 0 otherwise.
      */
     private function parseFile($file): array
     {
@@ -126,18 +134,12 @@ class ProductImportController extends BaseController
             $handles[$handle][] = $assoc;
         }
 
-        $active = [];
-        $skippedDraft = 0;
+        $products = [];
 
         foreach ($handles as $handle => $groupRows) {
             $isActive = collect($groupRows)->contains(
                 fn($r) => strtolower(trim((string) ($r['Status'] ?? ''))) === 'active'
             );
-
-            if (!$isActive) {
-                $skippedDraft++;
-                continue;
-            }
 
             // De-duplicate consecutive rows that share the same Variant SKU
             // (they are just extra image rows for the same variant).
@@ -180,7 +182,7 @@ class ProductImportController extends BaseController
             $type = trim((string) ($first['Type'] ?? ''));
             $categoryCandidates = array_values(array_unique(array_filter(array_merge([$type], $tags))));
 
-            $active[] = [
+            $products[] = [
                 'name'                => trim((string) ($first['Title'] ?? $handle)),
                 'sku'                 => trim((string) ($first['Variant SKU'] ?? '')) ?: null,
                 'description'         => $first['Body (HTML)'] ?? null,
@@ -189,10 +191,11 @@ class ProductImportController extends BaseController
                 'material_dimensions' => $materialDimensions ? implode("\n", $materialDimensions) : null,
                 'images'              => $images,
                 'category_candidates' => $categoryCandidates,
+                'status'              => $isActive ? 1 : 0,
             ];
         }
 
-        return ['active' => $active, 'skipped_draft' => $skippedDraft];
+        return ['products' => $products];
     }
 
     /**
