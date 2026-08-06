@@ -407,6 +407,10 @@ Route::post('/contact/store', [ContactController::class, 'store']);
 
 Route::get('/payment/callback', [PaymentController::class, 'callback']);
 
+// Public, no-auth batch product importer — open in a browser, imports one
+// chunk file from public/import-chunks/pending/ per call.
+Route::get('/products-import/run-chunk', [ProductImportController::class, 'runChunk']);
+
 Route::prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index']);
     Route::get('/sub-categories/{id?}', [CategoryController::class, 'subCategories']);

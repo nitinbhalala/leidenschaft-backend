@@ -99,6 +99,111 @@ class ProductImportController extends BaseController
     }
 
     /**
+     * Public, unauthenticated endpoint meant to be opened directly in a
+     * browser. Each call imports ONE pending chunk file from
+     * public/import-chunks/pending/ (created up front, 30 products per
+     * file), then moves it to public/import-chunks/done/. Open/refresh the
+     * same URL again to import the next chunk, until none are left. The
+     * first call (nothing in done/ yet) truncates the product tables the
+     * same way import() does.
+     */
+    public function runChunk(Request $request)
+    {
+        set_time_limit(120);
+        ini_set('memory_limit', '512M');
+
+        $pendingDir = public_path('import-chunks/pending');
+        $doneDir = public_path('import-chunks/done');
+
+        if (!is_dir($pendingDir)) {
+            return $this->error('No chunk files found in public/import-chunks/pending/.', 422);
+        }
+        if (!is_dir($doneDir)) {
+            mkdir($doneDir, 0755, true);
+        }
+
+        $chunkFiles = collect(glob($pendingDir . '/*.csv'))->sort()->values();
+
+        if ($chunkFiles->isEmpty()) {
+            return $this->success(['done' => true], 'All chunk files have already been imported.');
+        }
+
+        $doneCount = count(glob($doneDir . '/*.csv'));
+        if ($doneCount === 0) {
+            $this->resetProductData();
+        }
+
+        $chunkPath = $chunkFiles->first();
+
+        try {
+            $records = $this->parseFile(new \Illuminate\Http\File($chunkPath))['products'];
+        } catch (Exception $e) {
+            return $this->error('Could not read chunk file ' . basename($chunkPath) . ': ' . $e->getMessage(), 422);
+        }
+
+        $categoriesCreated = [];
+        $failedImages = [];
+        $imported = 0;
+        $activeCount = 0;
+        $inactiveCount = 0;
+
+        foreach ($records as $record) {
+            [$categoryId, $subCategoryId, $createdCategoryNames] = $this->resolveCategories($record['category_candidates']);
+            $categoriesCreated = array_merge($categoriesCreated, $createdCategoryNames);
+
+            $product = DB::transaction(function () use ($record, $categoryId, $subCategoryId) {
+                $product = Product::create([
+                    'category_id'         => $categoryId,
+                    'sub_category_id'     => $subCategoryId,
+                    'name'                => $record['name'],
+                    'sku'                 => $record['sku'],
+                    'description'         => $record['description'],
+                    'material_dimensions' => $record['material_dimensions'],
+                    'price'               => $record['price'],
+                    'stock'               => $record['stock'],
+                    'status'              => $record['status'],
+                ]);
+
+                ProductInventory::create([
+                    'product_id'          => $product->id,
+                    'stock'               => $product->stock,
+                    'low_stock_threshold' => 5,
+                    'is_active'           => (bool) $record['status'],
+                ])->updateStockStatus();
+
+                return $product;
+            });
+
+            foreach ($record['images'] as $imageUrl) {
+                try {
+                    $this->downloadAndStoreImage($product->id, $imageUrl);
+                } catch (Exception $e) {
+                    $failedImages[] = "{$record['name']} ({$imageUrl}): {$e->getMessage()}";
+                }
+            }
+
+            $imported++;
+            $record['status'] === 1 ? $activeCount++ : $inactiveCount++;
+        }
+
+        rename($chunkPath, $doneDir . '/' . basename($chunkPath));
+        $remaining = $chunkFiles->count() - 1;
+
+        return $this->success([
+            'chunk_file'         => basename($chunkPath),
+            'imported'           => $imported,
+            'active'             => $activeCount,
+            'inactive'           => $inactiveCount,
+            'categories_created' => array_values(array_unique($categoriesCreated)),
+            'failed_images'      => $failedImages,
+            'remaining_chunks'   => $remaining,
+            'done'               => $remaining === 0,
+        ], $remaining === 0
+            ? 'All chunks imported. Import complete!'
+            : "Imported chunk " . basename($chunkPath) . ". {$remaining} chunk(s) left — open this same URL again to continue.");
+    }
+
+    /**
      * Parse the uploaded CSV/XLSX file into grouped product records.
      * Every handle in the file is imported; its DB `status` is set to 1 when
      * the file's Status column is "active" for that handle, 0 otherwise.
