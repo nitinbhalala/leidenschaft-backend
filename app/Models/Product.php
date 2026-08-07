@@ -22,7 +22,9 @@ class Product extends Model
         'price',
         'stock',
         'sizes',
-        'status'
+        'status',
+        'meta_title',
+        'meta_description',
     ];
 
     protected $casts = [
@@ -37,7 +39,9 @@ class Product extends Model
         parent::boot();
 
         static::saving(function ($product) {
-            if ($product->isDirty('name') || !$product->slug) {
+            if ($product->isDirty('slug') && $product->slug) {
+                $product->slug = self::generateUniqueSlug($product->slug, $product->id);
+            } elseif ($product->isDirty('name') || !$product->slug) {
                 $product->slug = self::generateUniqueSlug($product->name, $product->id);
             }
         });

@@ -80,7 +80,7 @@ class ProductController extends BaseController
 
             $product = DB::transaction(function () use ($request) {
 
-                $product = Product::create([
+                $product = Product::create(array_merge([
                     'category_id'         => $request->category_id,
                     'sub_category_id'     => $request->sub_category_id,
                     'name'                => $request->name,
@@ -92,7 +92,9 @@ class ProductController extends BaseController
                     'stock'               => $request->stock ?? 0,
                     'sizes'               => $request->sizes,
                     'status'              => $request->status ?? 1,
-                ]);
+                    'meta_title'          => $request->meta_title,
+                    'meta_description'    => $request->meta_description,
+                ], $request->filled('slug') ? ['slug' => $request->slug] : []));
 
                 ProductInventory::create([
                     'product_id'          => $product->id,
@@ -201,7 +203,7 @@ class ProductController extends BaseController
 
             $product = DB::transaction(function () use ($request, $product) {
 
-                $product->update([
+                $product->update(array_merge([
                     'category_id'         => $request->category_id,
                     'sub_category_id'     => $request->sub_category_id,
                     'name'                => $request->name,
@@ -213,7 +215,9 @@ class ProductController extends BaseController
                     'stock'               => $request->stock ?? $product->stock,
                     'sizes'               => $request->sizes,
                     'status'              => $request->status ?? $product->status,
-                ]);
+                    'meta_title'          => $request->meta_title,
+                    'meta_description'    => $request->meta_description,
+                ], $request->filled('slug') ? ['slug' => $request->slug] : []));
 
                 $inventory = ProductInventory::where('product_id', $product->id)->first();
 
