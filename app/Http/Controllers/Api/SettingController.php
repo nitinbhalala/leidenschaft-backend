@@ -138,6 +138,7 @@ class SettingController extends BaseController
                 'youtube_url',
                 'linkedin_url',
                 'instagram_url',
+                'facebook_url',
             ];
 
             $settings = Setting::whereIn('key', $keys)
@@ -152,6 +153,7 @@ class SettingController extends BaseController
                 'youtube_url'   => $settings['youtube_url'] ?? '',
                 'linkedin_url'   => $settings['linkedin_url'] ?? '',
                 'instagram_url'   => $settings['instagram_url'] ?? '',
+                'facebook_url'   => $settings['facebook_url'] ?? '',
             ];
 
             return $this->success($response, 'Footer settings fetched successfully');
